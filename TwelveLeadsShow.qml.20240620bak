@@ -1,0 +1,3478 @@
+import QtQuick 2.12
+import QtCharts 2.3
+import QtQml 2.12   //使用定时器
+Rectangle {
+    width:880
+    height: 548//518
+    color: "#000000"
+
+    property alias speedtxt:speedAndGainText.text         //关于显示速度相关的信息
+    property alias filtertxt: filterText.text      //关于滤波器相关的信息
+    property alias minOfX: valueAxisX.min          //x轴的最小值
+    property alias maxOfX: valueAxisX.max          //x轴的最大值
+    property alias minOfY: valueAxisY.min          //Y轴的最小值
+    property alias maxOfY: valueAxisX.max          //Y轴的最大值
+
+
+    property var leadIYArray  :[2000]
+    property var leadIIYArray :[2000]
+    property var leadIIIYArray:[2000]
+    property var leadaVRYArray:[2000]
+    property var leadaVLYArray:[2000]
+    property var leadaVFYArray:[2000]
+    property var leadV1YArray :[2000]
+    property var leadV2YArray :[2000]
+    property var leadV3YArray :[2000]
+    property var leadV4YArray :[2000]
+    property var leadV5YArray :[2000]
+    property var leadV6YArray :[2000]
+
+    property int current:0
+    property bool  replaceFlag: false
+    property string  filterstring: ''
+//    property var leads12ShowBaselineY: [79700,61000,45500,40000,17800,-3000,83500,64000,47700,31200,15100,-2000]
+    //property var leads12ShowBaselineY: [8800,5600,4400,5800,2800,-1300,9000,7400,5640,3100,1200,-1000]
+    property var leads12ShowBaselineY: [-350,300,2700,8200,8600,8500,-100,2200,4270,5500,7400,-8950]
+    property var leads12ShowBaselineX: [50,500]
+    property var factor: 0.01
+    //property var leads12ShowBaselineX: [100,600]
+/*
+  3mv多一些，按照采集到的数据每个导联占据的高度为1800，所以Y轴的高度为1800*6 = 10800
+  property var leads12ShowBaselineY: [9000-200,7200-1600,5400-1000,3600+2200,1800+1000,-1300,9000,7200+200,5400+240,3600-500,1800-600,-1000]
+
+    */
+    /*
+    property var twelveLeadsSubLevel: [0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,
+        100,105,110,115,120,125,130,135,140,145,150,155,160,165,170,175,180,185,190,195,
+        200,205,210,215,220,225,230,235,240,245,250,255,260,265,270,275,280,285,290,295,
+        300,305,310,315,320,325,330,335,340,345,350,355,360,365,370,375,380,385,390,395,
+        400,405,410,415,420,425,430,435,440,445,450,455,460,465,470,475,480,485,490,495]*/
+   //12导联，每个导联显示2s的数据2000/5 = 400个点
+    /*property var twelveLeadsSubLevel: [0,4,8,12,16,20,24,28,32,36,40,44,48,52,56,60,64,68,72,76,80,84,88,92,96,
+    100,104,108,112,116,120,124,128,132,136,140,144,148,152,156,160,164,168,172,176,180,184,188,192,196,
+    200,204,208,212,216,220,224,228,232,236,240,244,248,252,256,260,264,268,272,276,280,284,288,292,296,
+    300,304,308,312,316,320,324,328,332,336,340,344,348,352,356,360,364,368,372,376,380,384,388,392,396,]*/
+    property var twelveLeadsSubLevel: [0,16,32,48,64,80,96,112,128,144,160,176,192,208,224,240,256,272,288,304,320,336,352,368,384]
+
+
+    /*
+    property var twelveLeadsSubLevel: [0,10,20,30,40,50,60,70,80,90,
+        100,110,120,130,140,150,160,170,180,190,
+        200,210,220,230,240,250,260,270,280,290,
+    300,310,320,330,340,350,360,370,380,390,
+    400,410,420,430,440,450,460,470,480,490,
+    500,510,520,530,540,550,560,570,580,590,
+    600,610,620,630,640,650,660,670,680,690,
+    700,710,720,730,740,750,760,770,780,790,
+    800,810,820,830,840,850,860,870,880,890,
+    900,910,920,930,940,950,960,970,980,990,]
+    */
+    /*
+    property var twelveLeadsSubLevel: [0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,
+        100,105,110,115,120,125,130,135,140,145,150,155,160,165,170,175,180,185,190,195,
+        200,205,210,215,220,225,230,235,240,245,250,255,260,265,270,275,280,285,290,295,
+        300,305,310,315,320,325,330,335,340,345,350,355,360,365,370,375,380,385,390,395,
+        400,405,410,415,420,425,430,435,440,445,450,455,460,465,470,475,480,485,490,495,
+        500,505,510,515,520,525,530,535,540,545,550,555,560,565,570,575,580,585,590,595,
+        600,605,610,615,620,625,630,635,640,645,650,655,660,665,670,675,680,685,690,695,
+        700,705,710,715,720,725,730,735,740,745,750,755,760,765,770,775,780,785,790,795,
+        800,805,810,815,820,825,830,835,840,845,850,855,860,865,870,875,880,885,890,895,
+        900,905,910,915,920,925,930,935,940,945,950,955,960,965,970,975,980,985,990,995,]*/
+    property var spLineSeriesLeadIArray: [leadI000,leadI001,leadI002,leadI003,leadI004,
+                                                    leadI005,leadI006,leadI007,leadI008,leadI009,
+                                                    leadI010,leadI011,leadI012,leadI013,leadI014,
+                                                    leadI015,leadI016,leadI017,leadI018,leadI019,
+                                                    leadI020,leadI021,leadI022,leadI023,leadI024,
+
+        ]
+    property var spLineSeriesLeadIIArray: [leadII000,leadII001,leadII002,leadII003,leadII004,
+                                                    leadII005,leadII006,leadII007,leadII008,leadII009,
+                                                    leadII010,leadII011,leadII012,leadII013,leadII014,
+                                                    leadII015,leadII016,leadII017,leadII018,leadII019,
+                                                    leadII020,leadII021,leadII022,leadII023,leadII024,
+                                                  ]
+    property var spLineSeriesLeadIIIArray: [leadIII000,leadIII001,leadIII002,leadIII003,leadIII004,
+                                                    leadIII005,leadIII006,leadIII007,leadIII008,leadIII009,
+                                                    leadIII010,leadIII011,leadIII012,leadIII013,leadIII014,
+                                                    leadIII015,leadIII016,leadIII017,leadIII018,leadIII019,
+                                                    leadIII020,leadIII021,leadIII022,leadIII023,leadIII024,
+                                                   ]
+    property var spLineSeriesLeadaVRArray: [leadaVR000,leadaVR001,leadaVR002,leadaVR003,leadaVR004,
+                                                    leadaVR005,leadaVR006,leadaVR007,leadaVR008,leadaVR009,
+                                                    leadaVR010,leadaVR011,leadaVR012,leadaVR013,leadaVR014,
+                                                    leadaVR015,leadaVR016,leadaVR017,leadaVR018,leadaVR019,
+                                                    leadaVR020,leadaVR021,leadaVR022,leadaVR023,leadaVR024,
+                                                    ]
+    property var spLineSeriesLeadaVLArray: [leadaVL000,leadaVL001,leadaVL002,leadaVL003,leadaVL004,
+                                                    leadaVL005,leadaVL006,leadaVL007,leadaVL008,leadaVL009,
+                                                    leadaVL010,leadaVL011,leadaVL012,leadaVL013,leadaVL014,
+                                                    leadaVL015,leadaVL016,leadaVL017,leadaVL018,leadaVL019,
+                                                    leadaVL020,leadaVL021,leadaVL022,leadaVL023,leadaVL024,
+                                                   ]
+    property var spLineSeriesLeadaVFArray: [leadaVF000,leadaVF001,leadaVF002,leadaVF003,leadaVF004,
+                                                    leadaVF005,leadaVF006,leadaVF007,leadaVF008,leadaVF009,
+                                                    leadaVF010,leadaVF011,leadaVF012,leadaVF013,leadaVF014,
+                                                    leadaVF015,leadaVF016,leadaVF017,leadaVF018,leadaVF019,
+                                                    leadaVF020,leadaVF021,leadaVF022,leadaVF023,leadaVF024,
+                                                    ]
+    property var spLineSeriesLeadV1Array: [leadV1000,leadV1001,leadV1002,leadV1003,leadV1004,
+                                                    leadV1005,leadV1006,leadV1007,leadV1008,leadV1009,
+                                                    leadV1010,leadV1011,leadV1012,leadV1013,leadV1014,
+                                                    leadV1015,leadV1016,leadV1017,leadV1018,leadV1019,
+                                                    leadV1020,leadV1021,leadV1022,leadV1023,leadV1024,
+                                                    ]
+    property var spLineSeriesLeadV2Array: [leadV2000,leadV2001,leadV2002,leadV2003,leadV2004,
+                                                    leadV2005,leadV2006,leadV2007,leadV2008,leadV2009,
+                                                    leadV2010,leadV2011,leadV2012,leadV2013,leadV2014,
+                                                    leadV2015,leadV2016,leadV2017,leadV2018,leadV2019,
+                                                    leadV2020,leadV2021,leadV2022,leadV2023,leadV2024,
+                                                   ]
+    property var spLineSeriesLeadV3Array: [leadV3000,leadV3001,leadV3002,leadV3003,leadV3004,
+                                                    leadV3005,leadV3006,leadV3007,leadV3008,leadV3009,
+                                                    leadV3010,leadV3011,leadV3012,leadV3013,leadV3014,
+                                                    leadV3015,leadV3016,leadV3017,leadV3018,leadV3019,
+                                                    leadV3020,leadV3021,leadV3022,leadV3023,leadV3024,
+                                                    ]
+    property var spLineSeriesLeadV4Array: [leadV4000,leadV4001,leadV4002,leadV4003,leadV4004,
+                                                    leadV4005,leadV4006,leadV4007,leadV4008,leadV4009,
+                                                    leadV4010,leadV4011,leadV4012,leadV4013,leadV4014,
+                                                    leadV4015,leadV4016,leadV4017,leadV4018,leadV4019,
+                                                    leadV4020,leadV4021,leadV4022,leadV4023,leadV4024,
+                                                    ]
+    property var spLineSeriesLeadV5Array: [leadV5000,leadV5001,leadV5002,leadV5003,leadV5004,
+                                                    leadV5005,leadV5006,leadV5007,leadV5008,leadV5009,
+                                                    leadV5010,leadV5011,leadV5012,leadV5013,leadV5014,
+                                                    leadV5015,leadV5016,leadV5017,leadV5018,leadV5019,
+                                                    leadV5020,leadV5021,leadV5022,leadV5023,leadV5024,
+                                                    ]
+    property var spLineSeriesLeadV6Array: [leadV6000,leadV6001,leadV6002,leadV6003,leadV6004,
+                                                    leadV6005,leadV6006,leadV6007,leadV6008,leadV6009,
+                                                    leadV6010,leadV6011,leadV6012,leadV6013,leadV6014,
+                                                    leadV6015,leadV6016,leadV6017,leadV6018,leadV6019,
+                                                    leadV6020,leadV6021,leadV6022,leadV6023,leadV6024,
+
+     ]
+
+    property var twelveLSplineSeriesAArray: [spLineSeriesLeadIArray,spLineSeriesLeadIIArray,spLineSeriesLeadIIIArray,
+                                             spLineSeriesLeadaVRArray,spLineSeriesLeadaVLArray,spLineSeriesLeadaVFArray,
+                                             spLineSeriesLeadV1Array,spLineSeriesLeadV2Array,spLineSeriesLeadV3Array,
+                                             spLineSeriesLeadV4Array,spLineSeriesLeadV5Array,spLineSeriesLeadV6Array,]
+    property var leadY: [12]
+    property var line1Color:"green"
+    property var line1Width: 2
+    property var line2Color:"green"
+    property var line2Width: 2
+    property var line3Color:"green"
+    property var line3Width: 2
+    property var line4Color:"green"
+    property var line4Width: 2
+    property var line5Color:"green"
+    property var line5Width: 2
+    property var line6Color:"green"
+    property var line6Width: 2
+    property var line7Color:"green"
+    property var line7Width: 2
+    property var line8Color:"green"
+    property var line8Width: 2
+    property var line9Color:"green"
+    property var line9Width: 2
+    property var line10Color:"green"
+    property var line10Width: 2
+    property var line11Color:"green"
+    property var line11Width: 2
+    property var line12Color:"green"
+    property var line12Width: 2
+
+
+    ChartView{         //ecg显示区
+        x: 0
+        y: 38 //显示3条心电图线
+        width: 880
+        height: 510//480 导联显示区域高度为60mm
+        plotAreaColor:"black"
+        backgroundColor: "black"
+        margins.top:0
+        margins.bottom:0
+        margins.left:0
+        margins.right:0
+        legend.visible: false
+
+
+        ValueAxis{
+            id:valueAxisX
+            min:0
+            //max:2200//2200 //2200 = 1000+1000+200 每个导联曲线长度是167。导联字符占30
+            //max:1100//100+100+50*2 每个导联曲线长度是167。导联字符占30
+            max:900//400+400+50*2 每个导联曲线长度是167。导联字符占30
+            labelsVisible: false
+            gridVisible: false
+            gridLineColor: "yellow"
+            tickCount: 50
+            visible: false
+
+        }
+        ValueAxis{
+            id:valueAxisY
+            min:0
+            max:10800//96000
+            labelsVisible: false
+            gridVisible: false
+            gridLineColor: "yellow"
+            tickCount: 50
+            visible: false
+        }
+
+
+        //导联I
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line1Color
+            width: line1Width
+            id:leadI024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+
+
+       //导联II
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line2Color
+            width: line2Width
+            id:leadII024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+
+
+        //导联III
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line3Color
+            width: line3Width
+            id:leadIII024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+
+        //导联aVR
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line4Color
+            width: line4Width
+            id:leadaVR024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+
+
+
+        //导联aVL
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line5Color
+            width: line5Width
+            id:leadaVL024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+
+
+        //导联aVF
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line6Color
+            width: line6Width
+            id:leadaVF024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        //导联V1
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line7Color
+            width: line7Width
+            id:leadV1024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+
+        //导联V2
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line8Color
+            width: line8Width
+            id:leadV2024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        //导联V3
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line9Color
+            width: line9Width
+            id:leadV3024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+        //导联V4
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line10Color
+            width: line10Width
+            id:leadV4024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+
+        //导联V5
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line11Color
+            width: line11Width
+            id:leadV5024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+        //导联V6
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6000
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6001
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6002
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6003
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6004
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6005
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6006
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6007
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6008
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6009
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6010
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6011
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6012
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6013
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6014
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6015
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6016
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6017
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6018
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6019
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6020
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6021
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6022
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6023
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+        LineSeries{
+            color:line12Color
+            width: line12Width
+            id:leadV6024
+
+            axisX:valueAxisX
+            axisY:valueAxisY
+        }
+
+
+    }
+
+    Text {
+        id: speedAndGainText
+        x: 8
+        y: 9
+        width: 164
+        height: 29
+        text: qsTr("25mm/s,10mm/mv")
+        color: "#ffffff"
+        font.pixelSize: 20
+        font.bold: true
+        verticalAlignment: Text.AlignVCenter
+    }
+
+    Text {
+        id: filterText
+        x: 637
+        y: 9
+        width: 227
+        height: 28
+        text: qsTr("LP150Hz,AC50Hz")
+        font.pixelSize: 20
+        color: "#ffffff"
+        horizontalAlignment: Text.AlignRight
+        verticalAlignment: Text.AlignVCenter
+    }
+    Text {
+        id: lead1txt
+        x: 12
+        y: 74
+        width: 20
+        text: qsTr("I")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+
+    Text {
+        id: lead2txt
+        x: 12
+        y: 157
+        width: 20
+        text: qsTr("II")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+
+    Text {
+        id: lead3txt
+        x: 12
+        y: 226
+        width: 20
+        text: qsTr("III")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+    Text {
+        id: lead4txt
+        x: 12
+        y: 303
+        width: 20
+        text: qsTr("aVR")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+
+    Text {
+        id: lead5txt
+        x: 12
+        y: 383
+        width: 20
+        text: qsTr("aVL")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+
+    Text {
+        id: lead6txt
+        x: 12
+        y: 466
+        width: 20
+        text: qsTr("aVF")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+    Text {
+        id: lead7txt
+        x: 451
+        y: 74
+        width: 20
+        text: qsTr("V1")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+
+    Text {
+        id: lead8txt
+        x: 451
+        y: 157
+        width: 20
+        text: qsTr("V2")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+
+    Text {
+        id: lead9txt
+        x: 451
+        y: 226
+        text: qsTr("V3")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+    Text {
+        id: lead10txt
+        x: 451
+        y: 303
+        width: 20
+        text: qsTr("V4")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+
+    Text {
+        id: lead11txt
+        x: 451
+        y: 383
+        width: 20
+        text: qsTr("V5")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+
+    Text {
+        id: lead12txt
+        x: 451
+        y: 466
+        text: qsTr("V6")
+        font.pixelSize: 20
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+        color:"green"
+    }
+
+    Text {
+        id: leadOff1
+        x: 198
+        y: 71
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+    Text {
+        id: leadOff2
+        x: 198
+        y: 154
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+    Text {
+        id: leadOff3
+        x: 198
+        y: 223
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+    Text {
+        id: leadOff4
+        x: 198
+        y: 300
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+    Text {
+        id: leadOff5
+        x: 198
+        y: 380
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+    Text {
+        id: leadOff6
+        x: 198
+        y: 463
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+
+    Text {
+        id: leadOff7
+        x: 637
+        y: 71
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+    Text {
+        id: leadOff8
+        x: 637
+        y: 154
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+    Text {
+        id: leadOff9
+        x: 637
+        y: 223
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+    Text {
+        id: leadOff10
+        x: 637
+        y: 300
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+    Text {
+        id: leadOff11
+        x: 637
+        y: 380
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+    Text {
+        id: leadOff12
+        x: 637
+        y: 463
+        color:"yellow"
+        text: qsTr("导联脱落")
+        font.pixelSize: 20
+    }
+
+
+
+    Timer{                   //取心电数据定时器，定时取心电数据
+        id:readECGDataTimer12
+        interval: 100 //时间间隔75ms
+        repeat: true
+        running: false
+        triggeredOnStart: true
+        onTriggered: {
+            on_receive_ecg_show_data()
+        }
+
+
+
+
+
+    }
+
+
+    Component.onCompleted: {  //组件加载完成 实现与m3DataControl信号的对接
+        //m3DataControl.list_ECG_data_show_changed.connect(on_receive_ecg_show_data)
+        m3DataControl.list_ECG_data_show_changed.connect(openTimerAndSendBackSignal)
+        current = 0
+        replaceFlag = false
+        //低通滤波
+        if(m3DataControl.lpSelectIndex === 0)
+        {
+            filterstring = "LP 25Hz"
+        }
+        else if(m3DataControl.lpSelectIndex === 1)
+        {
+            filterstring   = "LP 40Hz"
+        }
+        else if(m3DataControl.lpSelectIndex === 2)
+        {
+            filterstring  = "LP 150Hz"
+        }
+        else if(m3DataControl.lpSelectIndex === 3)
+        {
+            filterstring = ''
+        }
+
+        //高通滤波
+        if(m3DataControl.hpSelectIndex === 0)
+        {
+            if(filterstring == '')
+            {
+                filterstring  =  filterstring + "HP 0.05Hz"
+            }
+            else
+            {
+                filterstring  =  filterstring + ",HP 0.05Hz"
+            }
+        }
+        else if(m3DataControl.hpSelectIndex === 1)
+        {
+
+            if(filterstring == '')
+            {
+                filterstring  =  filterstring + "HP 0.15Hz"
+            }
+            else
+            {
+                filterstring  =  filterstring + ",HP 0.15Hz"
+            }
+        }
+        else if(m3DataControl.hpSelectIndex === 2)
+        {
+            if(filterstring == '')
+            {
+                filterstring  =  filterstring + "HP 0.3Hz"
+            }
+            else
+            {
+                filterstring  =  filterstring + ",HP 0.3Hz"
+            }
+
+        }
+        else if(m3DataControl.hpSelectIndex === 3)
+        {
+            if(filterstring == '')
+            {
+                filterstring  =  filterstring + "HP 0.67Hz"
+            }
+            else
+            {
+                filterstring  =  filterstring + ",HP 0.67Hz"
+            }
+        }
+        else if(m3DataControl.hpSelectIndex === 4)
+        {
+            filterstring  =  filterstring + ''
+        }
+
+
+        //电源滤波
+        if(m3DataControl.acSelectIndex === 0)
+        {
+            if(filterstring == '')
+            {
+                filterstring  =  filterstring + "AC 50Hz"
+            }
+            else
+            {
+                filterstring  =  filterstring + ",AC 50Hz"
+            }
+        }
+        else if(m3DataControl.acSelectIndex === 1)
+        {
+            if(filterstring == '')
+            {
+                filterstring  =  filterstring + "AC 60Hz"
+            }
+            else
+            {
+                filterstring  =  filterstring + ",AC 60Hz"
+            }
+        }
+        else if(m3DataControl.acSelectIndex === 2)
+        {
+
+            filterstring  =  filterstring + ''
+
+        }
+        filterText.text = filterstring
+
+
+
+        if(m3DataControl.gainType === 0)
+        {
+           speedAndGainText.text = "10mm/mv,";
+           valueAxisY.max = 6024  //经测量1mv的大概变化范围是 1003,整个屏幕曲线显示区间是60mm，所以10mm/mv ，Y的最大值是6018
+        }
+        else if(m3DataControl.gainType === 1)
+        {
+            speedAndGainText.text = "20mm/mv,";
+            valueAxisY.max = 3012  //经测量1mv的大概变化范围是 1003,整个屏幕曲线显示区间是60mm，所以20mm/mv ，Y的最大值是3012
+        }
+        else if(m3DataControl.gainType === 2)
+        {
+            speedAndGainText.text = "5mm/mv,";//经测量1mv的大概变化范围是 1003,整个屏幕曲线显示区间是60mm，所以5mm/mv ，Y的最大值是12048
+            valueAxisY.max = 12048   //每行显示高度为2000
+        }
+
+
+
+//        if(m3DataControl.gainType === 0)
+//        {
+//           speedAndGainText.text = "10mm/mv,";
+//            valueAxisY.max = 24000  //每行显示高度为4000
+
+//        }
+//        else if(m3DataControl.gainType === 1)
+//        {
+//            speedAndGainText.text = "20mm/mv,";
+//            valueAxisY.max = 12000  //每行显示高度为2000
+//        }
+//        else if(m3DataControl.gainType === 5)
+//        {
+//            speedAndGainText.text = "5mm/mv,";
+//            //valueAxisY.max = 12000  //每行显示高度为2000
+//        }
+
+
+
+        if(m3DataControl.speedType === 0)
+        {
+            speedAndGainText.text = speedAndGainText.text + "25mm/s";
+            valueAxisX.max = 900//400+400+50*2 每个导联曲线长度是400。导联字符占50
+
+
+        }
+        else if(m3DataControl.speedType === 1)
+        {
+            speedAndGainText.text = speedAndGainText.text + "50mm/s";
+            valueAxisX.max = 500//200+200+50*2 每个导联曲线长度是200。导联字符占50
+        }
+        calcultaXY12LeadsSubLevel()
+        leads12ShowBaselineYCalculate()
+        leadOffShowChanged() //加载完成，查看导联是否有脱落
+        m3DataControl.ecgShowStopFlagChanged.connect(ecgShowStopOrnot)
+        m3DataControl.leadsOffRAChange.connect(leadOffShowChanged)
+        m3DataControl.leadsOffLAChange.connect(leadOffShowChanged)
+        m3DataControl.leadsOffLLChange.connect(leadOffShowChanged)
+        m3DataControl.leadsOffV1Change.connect(leadOffShowChanged)
+        m3DataControl.leadsOffV2Change.connect(leadOffShowChanged)
+        m3DataControl.leadsOffV3Change.connect(leadOffShowChanged)
+        m3DataControl.leadsOffV4Change.connect(leadOffShowChanged)
+        m3DataControl.leadsOffV5Change.connect(leadOffShowChanged)
+        m3DataControl.leadsOffV6Change.connect(leadOffShowChanged)
+        m3DataControl.leadsOffRLChange.connect(leadOffShowChanged)
+        console.log("12leads load completed")
+        m3DataControl.clearECGData();
+    }
+
+
+    function calcultaXY12LeadsSubLevel() //计算X轴每段线的要显示的点数.val为轴的长度
+    {
+        var num = (parseInt((valueAxisX.max-100)/2)/(spLineSeriesLeadV6Array.length))
+        for(var i = 0;i< spLineSeriesLeadV6Array.length ;i++)
+        {
+            twelveLeadsSubLevel[i] = num*i
+            console.log("12LeadsSubLevel["+i+"] ="+twelveLeadsSubLevel[i])
+        }
+        leads12ShowBaselineX[0] = 50
+        leads12ShowBaselineX[1] = parseInt(valueAxisX.max/2+50)
+    }
+//    function leads12ShowBaselineYCalculate() //左右两排，第1个和第7个的Y轴是一样的
+//    {
+//        var num = parseInt(valueAxisY.max/6)
+//        for(var i = 0;i<12;i++)
+//        {
+//            leads12ShowBaselineY[i] = show_M3.baselineNUM[i] + (5-(i%6))*num
+//        }
+//    }
+    function leads12ShowBaselineYCalculate()
+    {
+        var num = parseInt(valueAxisY.max/6)
+
+
+        leads12ShowBaselineY[0] = m3DataControl.leadIBaseLine+5*num
+        leads12ShowBaselineY[1] = m3DataControl.leadIIBaseLine+4*num
+        leads12ShowBaselineY[2] = m3DataControl.leadIIIBaseLine+3*num
+        leads12ShowBaselineY[3] = m3DataControl.leadaVRBaseLine+2*num
+        leads12ShowBaselineY[4] = m3DataControl.leadaVLBaseLine+num
+        leads12ShowBaselineY[5] = m3DataControl.leadaVFBaseLine
+
+        leads12ShowBaselineY[6] = m3DataControl.leadV1BaseLine+5*num
+        leads12ShowBaselineY[7] = m3DataControl.leadV2BaseLine+4*num
+        leads12ShowBaselineY[8] = m3DataControl.leadV3BaseLine+3*num
+        leads12ShowBaselineY[9] = m3DataControl.leadV4BaseLine+2*num
+        leads12ShowBaselineY[10] = m3DataControl.leadV5BaseLine+num
+        leads12ShowBaselineY[11] = m3DataControl.leadV6BaseLine
+//        for( var a=0;a<12;a++)
+//        {
+//            console.log("lead12ShowBaselineY["+a+"] = "+leads12ShowBaselineY[a])
+//        }
+
+    }
+
+
+
+
+    //leads12ShowBaselineY
+    //leads12ShowBaselineX
+
+
+    Component.onDestruction:  {
+        m3DataControl.setGetECGDataTimerFlagFalse(); //将定时器开关的标志位置为假
+        m3DataControl.list_ECG_data_show_changed.disconnect(openTimerAndSendBackSignal)
+        m3DataControl.ecgShowStopFlagChanged.disconnect(ecgShowStopOrnot)
+        m3DataControl.leadsOffRAChange.disconnect(leadOffShowChanged)
+        m3DataControl.leadsOffLAChange.disconnect(leadOffShowChanged)
+        m3DataControl.leadsOffLLChange.disconnect(leadOffShowChanged)
+        m3DataControl.leadsOffV1Change.disconnect(leadOffShowChanged)
+        m3DataControl.leadsOffV2Change.disconnect(leadOffShowChanged)
+        m3DataControl.leadsOffV3Change.disconnect(leadOffShowChanged)
+        m3DataControl.leadsOffV4Change.disconnect(leadOffShowChanged)
+        m3DataControl.leadsOffV5Change.disconnect(leadOffShowChanged)
+        m3DataControl.leadsOffV6Change.disconnect(leadOffShowChanged)
+        m3DataControl.leadsOffRLChange.disconnect(leadOffShowChanged)
+        console.log("12leads load show destroyed")
+    }
+
+    //m3DataControl.ecgShowStopFlagChanged.connect(ecgShowStopOrnot)
+    //m3DataControl.ecgShowStopFlagChanged.disconnect(ecgShowStopOrnot)
+    function ecgShowStopOrnot()
+    {
+        if(m3DataControl.ecgShowStopFlag === true)
+        {
+            readECGDataTimer.running = false;//关闭定时器
+            m3DataControl.setGetECGDataTimerFlagFalse();
+        }
+    }
+
+
+    function leadOffShowChanged()
+    {
+        leadOff1.visible = false
+        leadOff2.visible = false
+        leadOff3.visible = false
+        leadOff4.visible = false
+        leadOff5.visible = false
+        leadOff6.visible = false
+        leadOff7.visible = false
+        leadOff8.visible = false
+        leadOff9.visible = false
+        leadOff10.visible = false
+        leadOff11.visible = false
+        leadOff12.visible = false
+        if(m3DataControl.leadsOffRA === true) //RA导联脱落  第I导联和第II导联显示脱落
+        {
+            leadOff1.visible = true
+            leadOff2.visible = true
+
+            leadOff4.visible = true
+            leadOff5.visible = true
+            leadOff6.visible = true
+            leadOff7.visible = true
+            leadOff8.visible = true
+            leadOff9.visible = true
+            leadOff10.visible = true
+            leadOff11.visible = true
+            leadOff12.visible = true
+        }
+        if(m3DataControl.leadsOffLA === true) //LA导联脱落  第I导联和第III导联显示脱落
+        {
+            leadOff1.visible = true
+            leadOff3.visible = true
+
+            leadOff4.visible = true
+            leadOff5.visible = true
+            leadOff6.visible = true
+            leadOff7.visible = true
+            leadOff8.visible = true
+            leadOff9.visible = true
+            leadOff10.visible = true
+            leadOff11.visible = true
+            leadOff12.visible = true
+        }
+        if(m3DataControl.leadsOffLL === true) //LL导联脱落  第II导联和第III导联显示脱落
+        {
+            leadOff1.visible = true
+            leadOff2.visible = true
+            leadOff3.visible = true
+            leadOff4.visible = true
+            leadOff5.visible = true
+            leadOff6.visible = true
+            leadOff7.visible = true
+            leadOff8.visible = true
+            leadOff9.visible = true
+            leadOff10.visible = true
+            leadOff11.visible = true
+            leadOff12.visible = true
+        }
+        if(m3DataControl.leadsOffV1 === true)
+        {
+            leadOff7.visible = true
+        }
+        if(m3DataControl.leadsOffV2 === true)
+        {
+            leadOff8.visible = true
+        }
+        if(m3DataControl.leadsOffV3 === true)
+        {
+            leadOff9.visible = true
+        }
+        if(m3DataControl.leadsOffV4 === true)
+        {
+            leadOff10.visible = true
+        }
+        if(m3DataControl.leadsOffV5 === true)
+        {
+            leadOff11.visible = true
+        }
+        if(m3DataControl.leadsOffV6 === true)
+        {
+            leadOff12.visible = true
+        }
+        if(m3DataControl.leadsOffRL === true) //RL导联脱落  所有导联显示脱落
+        {
+            leadOff1.visible = true
+            leadOff2.visible = true
+            leadOff3.visible = true
+            leadOff4.visible = true
+            leadOff5.visible = true
+            leadOff6.visible = true
+            leadOff7.visible = true
+            leadOff8.visible = true
+            leadOff9.visible = true
+            leadOff10.visible = true
+            leadOff11.visible = true
+            leadOff12.visible = true
+        }
+    }
+
+    function openTimerAndSendBackSignal()
+    {
+        readECGDataTimer12.running = true;
+        m3DataControl.setGetECGDataTimerFlagTrue();
+        console.log("timer is started");
+    }
+
+
+    function on_receive_ecg_show_data()
+    {
+        //console.log("ecg_data_received")
+
+
+
+        leadIYArray = m3DataControl.getECG12ShowArray(0)
+        //showECGdata(leadIYArray,0)
+        leadIIYArray = m3DataControl.getECG12ShowArray(1)
+        //showECGdata(leadIIYArray,1)
+        leadIIIYArray = m3DataControl.getECG12ShowArray(2)
+        //showECGdata(leadIIIYArray,2)
+        leadaVRYArray = m3DataControl.getECG12ShowArray(3)
+        //showECGdata(leadaVRYArray,3)
+        leadaVLYArray = m3DataControl.getECG12ShowArray(4)
+        //showECGdata(leadaVLYArray,4)
+        leadaVFYArray = m3DataControl.getECG12ShowArray(5)
+        //showECGdata(leadaVFYArray,5)
+        leadV1YArray = m3DataControl.getECG12ShowArray(6)
+        //showECGdata(leadV1YArray,6)
+        leadV2YArray = m3DataControl.getECG12ShowArray(7)
+        //showECGdata(leadV2YArray,7)
+        leadV3YArray = m3DataControl.getECG12ShowArray(8)
+        //showECGdata(leadV3YArray,8)
+        leadV4YArray = m3DataControl.getECG12ShowArray(9)
+        //showECGdata(leadV4YArray,9)
+        leadV5YArray = m3DataControl.getECG12ShowArray(10)
+        //showECGdata(leadV5YArray,10)
+        leadV6YArray = m3DataControl.getECG12ShowArray(11)
+        //showECGdata(leadV6YArray,11)
+        leads12ShowBaselineYCalculate()
+
+        var twelveLeadsSubLevelCurrentCount
+        //以下内容为显示心电曲线的数据更新的程序
+        console.log("length = ",leadIYArray.length)
+        for(var j = 0;j<leadIYArray.length;j++)
+        {
+
+            leadY[0]   = leadIYArray[j]*factor
+            leadY[1]  = leadIIYArray[j]*factor
+            leadY[2] = leadIIIYArray[j]*factor
+
+            leadY[3]  = leadaVRYArray[j]*factor
+            leadY[4]  = leadaVLYArray[j]*factor
+            leadY[5]  = leadaVFYArray[j]*factor
+
+            leadY[6] = leadV1YArray[j]*factor
+            leadY[7] = leadV2YArray[j]*factor
+            leadY[8] = leadV3YArray[j]*factor
+
+            leadY[9] = leadV4YArray[j]*factor
+            leadY[10] = leadV5YArray[j]*factor
+            leadY[11] = leadV6YArray[j]*factor
+
+            for(var twelveLeadsSubLevelNum = 0; twelveLeadsSubLevelNum < twelveLeadsSubLevel.length; twelveLeadsSubLevelNum++)
+            {
+
+                if(twelveLeadsSubLevelNum === (twelveLeadsSubLevel.length - 1))
+                {
+                    twelveLeadsSubLevelCurrentCount = twelveLeadsSubLevelNum
+                    break;
+                }
+                if((current>=twelveLeadsSubLevel[twelveLeadsSubLevelNum])&&(current<twelveLeadsSubLevel[twelveLeadsSubLevelNum+1]))
+                {
+
+                    twelveLeadsSubLevelCurrentCount = twelveLeadsSubLevelNum
+                    break
+
+                }
+
+            }
+            //console.log(twelveLeadsSubLevelCurrentCount)
+            for(var leadsNum = 0; leadsNum < 12; leadsNum++)
+            {
+                if(leadsNum<6)  //区分左右两排的数据
+                {
+                    twelveLSplineSeriesAArray[leadsNum][twelveLeadsSubLevelCurrentCount].append(current+leads12ShowBaselineX[0], leadY[leadsNum]+leads12ShowBaselineY[leadsNum])
+                }
+                else
+                {
+                    twelveLSplineSeriesAArray[leadsNum][twelveLeadsSubLevelCurrentCount].append(current+leads12ShowBaselineX[1], leadY[leadsNum]+leads12ShowBaselineY[leadsNum])
+                }
+
+                if(current === twelveLeadsSubLevel[twelveLeadsSubLevelCurrentCount])
+                {
+                    if(twelveLeadsSubLevelCurrentCount === (twelveLeadsSubLevel.length-1))
+                    {
+                        twelveLSplineSeriesAArray[leadsNum][0].clear()
+                    }
+                    else
+                    {
+                        twelveLSplineSeriesAArray[leadsNum][twelveLeadsSubLevelCurrentCount+1].clear()
+                    }
+                    // console.log("cleared")
+
+                }
+
+            }
+
+            current = current+1;
+
+
+            //if (current >= (valueAxisX.max/2-100))
+            if (current >= (valueAxisX.max/2-50))
+            {
+                //replaceFlag = true
+                current = 0
+
+                return
+            }
+            if(j === (leadIYArray.length-1)) //如果显示到了最后一个数
+            {
+                m3DataControl.showOverAndClear()
+            }
+        }
+    }
+    function showECGdata(lead,num)
+    {
+        console.log("lead",num,".legth = ",lead.length)
+        for(var i =0;i<lead.length;i++)
+        {
+            console.log("lead[",num,"][",i,"] = ",lead[num])
+        }
+    }
+}
+
+    /*##^##
+Designer {
+    D{i:0;formeditorZoom:1.1}
+}
+##^##*/
