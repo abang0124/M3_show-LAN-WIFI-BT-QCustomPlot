@@ -164,6 +164,11 @@ M3ShowController::M3ShowController(QObject *parent) : QObject(parent)
     connect(dataAcquisition,&DataAcquisition::BtClientDisconnected,this,&M3ShowController::btDisconnected); //蓝牙断开连接 更新标题栏
     connect(dataAcquisition,&DataAcquisition::bluetoothOpenResult,this,&M3ShowController::onRecBluetoothOpenResult); //蓝牙打开成功与否
 
+    connect(this,&M3ShowController::updateSoftWare2DataAcq,dataAcquisition,&DataAcquisition::onRecM3DataShowupdateSoftWareSig);//软件更新的信号与槽
+    connect(dataAcquisition,&DataAcquisition::softWareUpdataSuccess,this,&M3ShowController::softWareUpdataSucess);//文件更新成功
+    connect(dataAcquisition,&DataAcquisition::softWareUpdataFailed,this,&M3ShowController::softWareUpdataFailed);//文件更新失败
+    connect(dataAcquisition,&DataAcquisition::fileNotExist,this,&M3ShowController::fileNotExist);//文件不存在
+    connect(dataAcquisition,&DataAcquisition::recordFileNotExist,this,&M3ShowController::recordFileFailedSlot);// 记录文件设备不存在
 //    dbusConn = new DBusConnman(this); //dbus connman 网络管理
 //    m_netTransFlag = dbusConn->getCurrentServiceType();
 //    qDebug()<<"m_netTransFlag = "<<m_netTransFlag;
@@ -1127,6 +1132,12 @@ void M3ShowController::onRecBluetoothOpenResult(bool result,QString btMacAddress
     }
 }
 
+void M3ShowController::recordFileFailedSlot()
+{
+    m_recordECGFlag = false;
+    emit recordFileFailed();
+}
+
 
 
 QList<int> M3ShowController::getECGShowArray(int i) //3导联显示专用
@@ -1706,6 +1717,11 @@ void M3ShowController::writeBtName(QString bluetoothName) //编写蓝牙名字
     }
 }
 
+void M3ShowController::updateSoftWare() //应用软件更新
+{
+    emit updateSoftWare2DataAcq();
+}
+
 
 
 void M3ShowController::ecg3or12changed(bool value)  //12导联的显示模式 2*6或者3*4变化了
@@ -1719,40 +1735,67 @@ void M3ShowController::warnSetBackToDefalut() //报警相关的值恢复到默�
 {
     //阈值设置界面
     m_WideOrNarrowThresHoldPage = true; //默认是设置窄阈值
+    emit wideOrNarrowThresHoldPageChanged();
     m_WideOrNarrowThresHoldChoice = true; //默认是选中窄阈值
+    emit wideOrNarrowThresHoldChoiceChanged();
 //  血氧的阈值
 //    窄阈值
     m_spo2ThresHoldValue = 90;     //血氧阈值低于95时报警
+    emit spo2ThresHoldValueChanged();
     m_spo2ThresHoldLevel = 0;      //血氧的报警级别为0 高      1 中   2  低
+    emit spo2ThresHoldLevelChanged();
 //    宽阈值
     m_spo2ThresHoldValueWide = 95;     //血氧阈值低于95时报警
+    emit spo2ThresHoldValueChangedWide();
     m_spo2ThresHoldLevelWide = 0;      //血氧的报警级别为0 高      1 中   2  低
+    emit spo2ThresHoldLevelChangedWide();
+
 //血压的阈值
 //    窄阈值
     m_bpSYSThresHoldValueH = 140;
+     emit bpSYSThresHoldValueHChanged();
     m_bpSYSThresHoldValueL = 90;
+    emit bpSYSThresHoldValueLChanged();
     m_bpDIAThresHoldValueH = 90;
+    emit bpDIAThresHoldValueHChanged();
     m_bpDIAThresHoldValueL = 60;
+    emit bpDIAThresHoldValueLChanged();
     m_bpSYSThresHoldLevel = 1 ; //报警级别为0 高      1 中   2  低
+    emit bpSYSThresHoldLevelChanged();
     m_bpDIAThresHoldLevel = 1 ; //报警级别为0 高      1 中   2  低
+    emit bpDIAThresHoldLevelChanged();
 //宽阈值
     m_bpSYSThresHoldValueHWide = 120;
+    emit bpSYSThresHoldValueHChangedWide();
     m_bpDIAThresHoldValueLWide = 70;
+    emit bpSYSThresHoldValueLChangedWide();
     m_bpSYSThresHoldValueHWide = 70;
+    emit bpDIAThresHoldValueHChangedWide();
     m_bpDIAThresHoldValueLWide = 50;
+    emit bpDIAThresHoldValueLChangedWide();
     m_bpSYSThresHoldLevelWide = 1 ; //报警级别为0 高      1 中   2  低
+    emit bpSYSThresHoldLevelChangedWide();
     m_bpDIAThresHoldLevelWide = 1 ; //报警级别为0 高      1 中   2  低
+    emit bpDIAThresHoldLevelChangedWide();
 //心率的阈值
 //    窄阈值
     m_hrFastValue = 100;
+    emit hrFastValueChanged();
     m_hrFastLevel = 2; //报警级别为0 高      1 中   2  低
+    emit hrFastLevelChanged();
     m_hrSlowValue = 60;
+    emit hrSlowValueChanged();
     m_hrSlowLevel = 2; //报警级别为0 高      1 中   2  低
+    hrSlowLevelChanged();
 //    宽阈值
     m_hrFastValueWide = 95;
+    emit hrFastValueChangedWide();
     m_hrFastLevelWide = 2; //报警级别为0 高      1 中   2  低
+    emit hrFastLevelChangedWide();
     m_hrSlowValueWide = 65;
+    emit hrSlowValueChangedWide();
     m_hrSlowLevelWide = 2; //报警级别为0 高      1 中   2  低
+    emit hrSlowLevelChangedWide();
 }
 
 void M3ShowController::clearECGData() //导联界面显示加载完成，会调用此函数
@@ -1785,42 +1828,87 @@ void M3ShowController::time_upadate_slot()//更新屏幕上的时间的显示
 //槽函数
 void M3ShowController::onRecNIBPDataFromDataAcq(QList<quint16> *NIBPSYSData, QList<quint16> *NIBPDIAData) //接收到数据测量的数据，将数据显示在屏幕上 //发送血压值
 {
-    qDebug()<<"the list length at start is "<<NIBPDIAData->length()<<endl;
+    //qDebug()<<"the list length at start is "<<NIBPDIAData->length()<<endl;
     m_bpValue_sys = NIBPSYSData->takeFirst();
     m_bpValue_dia = NIBPDIAData->takeFirst();
     if(m_WideOrNarrowThresHoldChoice == true)//窄阈值
     {
-        if((m_bpValue_sys>m_bpSYSThresHoldValueH)||(m_bpValue_dia>m_bpDIAThresHoldValueH))//收缩压大于收缩压范围 舒张压大于舒张压范围
+
+        if(((m_bpValue_sys<=m_bpSYSThresHoldValueH)&&(m_bpValue_sys>=m_bpSYSThresHoldValueL))&&((m_bpValue_dia<=m_bpDIAThresHoldValueH)&&(m_bpValue_dia>=m_bpDIAThresHoldValueL)))//收缩压和舒张压都在正常范围之内
         {
-            emit warnMessage2MainPage(4,m_bpSYSThresHoldLevel);
-        }
-        else{
             emit warnMessage2MainPage(13,0); //发送血压正常信号
         }
-        if((m_bpValue_dia<m_bpDIAThresHoldValueL)||(m_bpValue_sys<m_bpSYSThresHoldValueL)) //收缩压小于收缩压范围  舒张压小于舒张压范围
-        {
-            emit warnMessage2MainPage(5,m_bpDIAThresHoldLevel);
-        }
         else {
-            emit warnMessage2MainPage(13,0);   //发送血压正常信号
+                if((m_bpValue_sys>m_bpSYSThresHoldValueH)||(m_bpValue_dia>m_bpDIAThresHoldValueH))//收缩压大于收缩压范围 舒张压大于舒张压范围
+                {
+                    //qDebug()<<"emit BPH signal";
+                    emit warnMessage2MainPage(4,m_bpSYSThresHoldLevel);
+
+                }
+
+                if((m_bpValue_dia<m_bpDIAThresHoldValueL)||(m_bpValue_sys<m_bpSYSThresHoldValueL)) //收缩压小于收缩压范围  舒张压小于舒张压范围
+                {
+                    //qDebug()<<"emit BPL signal";
+                    emit warnMessage2MainPage(5,m_bpDIAThresHoldLevel);
+                }
         }
+
+
+//        if((m_bpValue_sys>m_bpSYSThresHoldValueH)||(m_bpValue_dia>m_bpDIAThresHoldValueH))//收缩压大于收缩压范围 舒张压大于舒张压范围
+//        {
+//            qDebug()<<"emit BPH signal";
+//            emit warnMessage2MainPage(4,m_bpSYSThresHoldLevel);
+
+//        }
+//        else{
+//            qDebug()<<"emit BP Normal signal";
+//            emit warnMessage2MainPage(13,0); //发送血压正常信号
+//        }
+//        if((m_bpValue_dia<m_bpDIAThresHoldValueL)||(m_bpValue_sys<m_bpSYSThresHoldValueL)) //收缩压小于收缩压范围  舒张压小于舒张压范围
+//        {
+//            qDebug()<<"emit BPL signal";
+//            emit warnMessage2MainPage(5,m_bpDIAThresHoldLevel);
+//        }
+//        else {
+//            qDebug()<<"emit BP Normal signal";
+//            emit warnMessage2MainPage(13,0);   //发送血压正常信号
+//        }
     }
     else if(m_WideOrNarrowThresHoldChoice == false)//宽阈值
     {
-        if((m_bpValue_sys>m_bpSYSThresHoldValueHWide)||(m_bpValue_dia>m_bpDIAThresHoldValueHWide))//收缩压大于收缩压范围 舒张压大于舒张压范围
+
+        if(((m_bpValue_sys<=m_bpSYSThresHoldValueHWide)&&(m_bpValue_sys>=m_bpSYSThresHoldValueLWide))&&((m_bpValue_dia<=m_bpDIAThresHoldValueHWide)&&(m_bpValue_dia>=m_bpDIAThresHoldValueLWide)))//收缩压和舒张压都在正常范围之内
         {
-            emit warnMessage2MainPage(4,m_bpSYSThresHoldLevelWide);
-        }
-        else{
-            emit warnMessage2MainPage(13,0);   //发送血压正常信号
-        }
-        if((m_bpValue_dia<m_bpDIAThresHoldValueLWide)||(m_bpValue_sys<m_bpSYSThresHoldValueLWide)) //收缩压小于收缩压范围  舒张压小于舒张压范围
-        {
-            emit warnMessage2MainPage(5,m_bpDIAThresHoldLevelWide);
+            emit warnMessage2MainPage(13,0); //发送血压正常信号
         }
         else {
-            emit warnMessage2MainPage(13,0);   //发送血压正常信号
+                if((m_bpValue_sys>m_bpSYSThresHoldValueHWide)||(m_bpValue_dia>m_bpDIAThresHoldValueHWide))//收缩压大于收缩压范围 舒张压大于舒张压范围
+                {
+                    //qDebug()<<"emit BPH signal";
+                    emit warnMessage2MainPage(4,m_bpSYSThresHoldLevelWide);
+
+                }
+
+                if((m_bpValue_dia<m_bpDIAThresHoldValueLWide)||(m_bpValue_sys<m_bpSYSThresHoldValueLWide)) //收缩压小于收缩压范围  舒张压小于舒张压范围
+                {
+                    //qDebug()<<"emit BPL signal";
+                    emit warnMessage2MainPage(5,m_bpDIAThresHoldLevelWide);
+                }
         }
+//        if((m_bpValue_sys>m_bpSYSThresHoldValueHWide)||(m_bpValue_dia>m_bpDIAThresHoldValueHWide))//收缩压大于收缩压范围 舒张压大于舒张压范围
+//        {
+//            emit warnMessage2MainPage(4,m_bpSYSThresHoldLevelWide);
+//        }
+//        else{
+//            emit warnMessage2MainPage(13,0);   //发送血压正常信号
+//        }
+//        if((m_bpValue_dia<m_bpDIAThresHoldValueLWide)||(m_bpValue_sys<m_bpSYSThresHoldValueLWide)) //收缩压小于收缩压范围  舒张压小于舒张压范围
+//        {
+//            emit warnMessage2MainPage(5,m_bpDIAThresHoldLevelWide);
+//        }
+//        else {
+//            emit warnMessage2MainPage(13,0);   //发送血压正常信号
+//        }
 
     }
     emit bPValueChanged();

@@ -1,5 +1,5 @@
 import QtQuick 2.12
-
+import QtQuick.Controls 1.4
 Rectangle {
     id:bPComponent
     width: 400
@@ -33,9 +33,10 @@ Rectangle {
         righttxt: "mmHg"
     }
 
-    Text {  //第一界面
+    Rectangle {  //第一界面
         id: bPtxt
         visible: true
+        property alias text: bpLabel.text
         property alias uptxt: uptxt.text      //上标限制 显示为100
         property alias downtxt: downtxt.text  //下表显示 显示为90
         property alias countDownTime : countDownTime.text //倒计时
@@ -45,17 +46,27 @@ Rectangle {
         x: 0
         y: 34
         width: 400
-        height: 137
-        text: qsTr("--/--")
-        font.pixelSize: 80
-        font.bold: true
-        color:"#ffffff"
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+        height: 142
+        //color:"#3f4247"
+        color:bPComponent.color
+        Label{
+            id: bpLabel
+            x: 0
+            y: 30
+            width: 400
+            height: 105
+            text: qsTr("--/--")
+            font.pixelSize: 75
+            font.bold: true
+            color:"#ffffff"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+
+        }
         Text {
             id: uptxt
             x: 8
-            y: 19
+            y: 14
             width: 38
             height: 27
             font.bold: true
@@ -67,7 +78,7 @@ Rectangle {
         Text {
             id: downtxt
             x: 8
-            y: 129
+            y: 134
             width: 38
             height: 27
             font.bold: true

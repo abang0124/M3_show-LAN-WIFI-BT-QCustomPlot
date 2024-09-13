@@ -100,6 +100,10 @@ public:
     Q_INVOKABLE QString readBtName(void);
     Q_INVOKABLE void writeBtName(QString);
 
+    //软件更新
+    Q_INVOKABLE void updateSoftWare(); //更新软件
+
+
     //标题栏的数据
     Q_PROPERTY(QString time READ time WRITE setTime NOTIFY timeChanged) //系统的时间参数
     Q_PROPERTY(QString date MEMBER m_date NOTIFY dateChanged)           //系统的日期参数
@@ -534,6 +538,13 @@ public:
 
 signals:
 
+    //软件更新的信号 发送给dataacquisition
+    void updateSoftWare2DataAcq();
+    void softWareUpdataSucess();
+    void softWareUpdataFailed();
+    void fileNotExist();
+
+    void recordFileFailed();//记录文件失败信号
 
     //发送心电采集信号 ，打开该线程的定时器，定时采集信号
     void starDataAcquSignal();
@@ -856,6 +867,7 @@ public slots:
     void onRecBluetoothOpenResult(bool,QString); //接受蓝牙打开结果的槽函数
 //    void btOpenSuccessed(void);//蓝牙打开成功
 //    void btOpenFailed(void);//蓝牙打开失败
+    void recordFileFailedSlot(); //记录文件打开失败的槽函数
 
 
 

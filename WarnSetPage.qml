@@ -73,6 +73,7 @@ Rectangle {
                 anchors.topMargin: 0
                 onClicked:
                 {
+                    narrowThresHoldRadio.checked = true
                     m3DataControl.warnSetBackToDefalut();
 //                   m3DataControl.wideOrNarrowThresHoldPage = m3DataControl.defultWideOrNarrowThresHoldPage ;
 //                   m3DataControl.wideOrNarrowThresHoldChoice = m3DataControl.defultWideOrNarrowThresHoldChoice;
@@ -396,6 +397,7 @@ Rectangle {
         }
 
     }
+
     //内容部分的结尾
     /*
             Row {                      //加减按键和显示内容组件

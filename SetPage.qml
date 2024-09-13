@@ -573,7 +573,7 @@ Rectangle {
         x:420
         y:280
         width: 160
-        height: 40
+        height: 100
         leftMargin: 0
         rightMargin: 0
         topMargin: 0
@@ -587,6 +587,7 @@ Rectangle {
             color: "#4d4141"
             Text {
                 anchors.fill:parent
+                font.pixelSize: 30
                 text: "切换成功"
                 color: "white"
                 horizontalAlignment: Text.AlignHCenter
@@ -601,7 +602,7 @@ Rectangle {
         x:320
         y:280
         width: 280
-        height: 30
+        height: 100
         leftMargin: 0
         rightMargin: 0
         topMargin: 0
@@ -615,6 +616,7 @@ Rectangle {
             color: "#4d4141"
             Text {
                 anchors.fill:parent
+                font.pixelSize: 30
                 color: "white"
                 text: "切换失败，稍后再试"
                 horizontalAlignment: Text.AlignHCenter

@@ -140,6 +140,32 @@ Rectangle {
                 }
             }
         }
+        Rectangle {
+            id: updaeSoftWare
+            x: 0
+            y: 212
+            width: 880
+            height: 100
+            color: "#ffffff"
+            Text {
+                id: update
+                x: 140
+                y: 25
+                width: 300
+                height: 50
+                text: qsTr("软件更新")
+                font.pixelSize: 40
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+                font.bold: true
+            }
+            MouseArea{
+                anchors.fill:parent
+                onClicked: {
+                    m3DataControl.updateSoftWare() //软件更新
+                }
+            }
+        }
     }
 
 

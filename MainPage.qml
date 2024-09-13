@@ -10,6 +10,8 @@ import QtQuick.VirtualKeyboard 2.4        //虚拟键盘相关的包
 import QtQuick.VirtualKeyboard.Styles 2.2
 import QtQuick.VirtualKeyboard.Settings 2.2
 
+import QtQuick.Controls 1.4
+
 import QtMultimedia 5.8 //播放声音
 
 Rectangle {
@@ -190,7 +192,7 @@ Rectangle {
     property alias bottomBtnRecordECGBKColor:bottomBtn.recordECGBKColor
     property alias bottomBtnWarnSetBKColor  :bottomBtn.warnSetBKColor
     property alias bottomBtnMainMenuBKColor :bottomBtn.mainMenuBKColor
-
+    property alias bottomBtnRecordECGtxt    :bottomBtn.recordECGBKTxt
     property int loaderContenIndex: 1
     //标题栏的属性和信号
     property int warnPauseCountDownTime : 120 //报警暂停倒计时 目前设定是120S
@@ -221,6 +223,21 @@ Rectangle {
         z:1
         id:startImage
         source:"img/logo_kernel.bmp"
+        MouseArea{
+            anchors.fill: parent
+        }
+        Label{
+            x: 0
+            y: 574
+            width: parent.width
+            height: 34
+            color:"black"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            font.pixelSize: 50
+            font.bold: true
+            text:"启动中..."
+        }
     }
 
     M3ShowController{ //C++编写的数据类
@@ -402,7 +419,7 @@ Rectangle {
         bottomBtn.warnPauseBKColor = "gray"
         title.warnCountDownTimeVisible = true
         m3DataControl.alarmSoundVolume(0);//报警关闭，关闭报警声音
-        m3DataControl.warnCloseFlag = true
+        m3DataControl.warnCloseFlag = true //报警关闭标志位
     }
     function warnOpen()//报警打开
     {
@@ -510,13 +527,13 @@ Rectangle {
 
             if(m3DataControl.wideOrNarrowThresHoldChoice === true)//判断当前设置是窄阈值还是宽阈值 true为窄阈值 false为宽阈值
             {
-                bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueH+"/"+m3DataControl.bpDIAThresHoldValueH //收缩压上限值
-                bPShow.bPDowntxt = m3DataControl.bpSYSThresHoldValueL+"/"+m3DataControl.bpDIAThresHoldValueL //舒张压下限值
+                bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueH+"/"+m3DataControl.bpDIAThresHoldValueH //上限值
+                bPShow.bPDowntxt = m3DataControl.bpSYSThresHoldValueL+"/"+m3DataControl.bpDIAThresHoldValueL //下限值
             }
             else if (m3DataControl.wideOrNarrowThresHoldChoice === false) //为宽阈值时
             {
-                bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueHWide+"/"+m3DataControl.bpDIAThresHoldValueHWide //收缩压上限值
-                bPShow.bPDowntxt = m3DataControl.bpSYSThresHoldValueLWide+"/"+m3DataControl.bpDIAThresHoldValueLWide //舒张压下限值
+                bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueHWide+"/"+m3DataControl.bpDIAThresHoldValueHWide //上限值
+                bPShow.bPDowntxt = m3DataControl.bpSYSThresHoldValueLWide+"/"+m3DataControl.bpDIAThresHoldValueLWide //下限值
 //                bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueWide    //收缩压上限值
 //                bPShow.bPDowntxt = m3DataControl.bpDIAThresHoldValueWide   //舒张压下限值
             }
@@ -537,14 +554,14 @@ Rectangle {
         {
             if(m3DataControl.wideOrNarrowThresHoldChoice === true)//如果当前阈值为窄阈值
             {
-                bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValue //收缩压上限值
+                bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueH+"/"+ m3DataControl.bpDIAThresHoldValueH//收缩压上限值
             }
         }
         function bpDIAValueShow()
         {
             if(m3DataControl.wideOrNarrowThresHoldChoice === true)//如果当前阈值为窄阈值
             {
-                bPShow.bPDowntxt = m3DataControl.bpDIAThresHoldValue //舒张压下限值
+                bPShow.bPDowntxt = m3DataControl.bpSYSThresHoldValueL+"/"+ m3DataControl.bpDIAThresHoldValueL//舒张压下限值
             }
         }
 
@@ -552,14 +569,14 @@ Rectangle {
         {
             if(m3DataControl.wideOrNarrowThresHoldChoice === false)//如果当前阈值为宽阈值
             {
-                bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueWide //收缩压上限值
+                bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueWideH+"/"+m3DataControl.bpDIAThresHoldValueWideH //收缩压上限值
             }
         }
         function bpDIAValueWideShow()
         {
             if(m3DataControl.wideOrNarrowThresHoldChoice === false)//如果当前阈值为宽阈值
             {
-                bPShow.bPDowntxt = m3DataControl.bpDIAThresHoldValueWide //舒张压下限值
+                bPShow.bPDowntxt = m3DataControl.bpSYSThresHoldValueWideL+"/"+m3DataControl.bpDIAThresHoldValueWideL //舒张压下限值
             }
         }
 
@@ -632,21 +649,18 @@ Rectangle {
             hRshow.hRUuptxt = m3DataControl.hrFastValue //心率过速上限值
             hRshow.hRDowntxt = m3DataControl.hrSlowValue //心动过缓下限值
             sPO2Show.sPO2Downtxt = m3DataControl.spo2ThresHoldValue //血氧的下限值
-            bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValue //收缩压上限值
-            bPShow.bPDowntxt = m3DataControl.bpDIAThresHoldValue //舒张压下限值
+            bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueH+"/"+m3DataControl.bpSYSThresHoldValueL //收缩压上限值
+            bPShow.bPDowntxt = m3DataControl.bpDIAThresHoldValueH+"/"+m3DataControl.bpDIAThresHoldValueL //舒张压下限值
         }
         else if (m3DataControl.wideOrNarrowThresHoldChoice === false) //为宽阈值时
         {
             hRshow.hRUuptxt = m3DataControl.hrFastValueWide    //心率过速上限值
             hRshow.hRDowntxt = m3DataControl.hrSlowValueWide   //心动过缓下限值
             sPO2Show.sPO2Downtxt = m3DataControl.spo2ThresHoldValueWide //血氧的下限值
-            bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueWide    //收缩压上限值
-            bPShow.bPDowntxt = m3DataControl.bpDIAThresHoldValueWide   //舒张压下限值
+            bPShow.bPUptxt = m3DataControl.bpSYSThresHoldValueHWide+"/"+m3DataControl.bpSYSThresHoldValueLWide    //收缩压上限值
+            bPShow.bPDowntxt = m3DataControl.bpDIAThresHoldValueHWide+"/"+m3DataControl.bpDIAThresHoldValueLWide   //舒张压下限值
         }
     }
-
-
-
 
 
     Loader{
@@ -813,17 +827,56 @@ Rectangle {
         m3DataControl.spo2NumChanged.connect(changeSPO2Value)//更新血氧值的显示
         m3DataControl.timeChanged.connect(updataTitleTime)   //更新时间显示
         m3DataControl.timeChanged.connect(bPAutoCountDownTimeUpdata)//自动测量血压的倒计时
-        m3DataControl.timeChanged.connect(warnPauseCountDownTimeUpdata)//自动测量血压的倒计时
+        m3DataControl.timeChanged.connect(warnPauseCountDownTimeUpdata)//报警暂停的倒计时
         m3DataControl.heartRateChanged.connect(changeHeartRateValue) //更新心率显示
         m3DataControl.patientTypeChanged.connect(changeTitlePatientType)//更新病人类型。更新标题栏病人类型图片
         m3DataControl.wideOrNarrowThresHoldChoiceChanged.connect(wideOrNarrowThresHoldChanged)//宽窄阈值切换时，心率框，血压框，血氧框上限值下限值的变化
         m3DataControl.warnMessage2MainPage.connect(warnMessageProcess)  //处理报警信息
 
+        m3DataControl.softWareUpdataSucess.connect(popupScuessShow) //软件更新成功
+        m3DataControl.softWareUpdataFailed.connect(popupFailedShow) //软件更新失败
+        m3DataControl.fileNotExist.connect(popupFileNotExistShow) //文件不存在
+        m3DataControl.recordFileFailed.connect(popupRecordFileFailedShow)//记录文件失败
         // playAlarmSound()
         //测试模块闪烁代码
         //        hrShowTimer.start()
         //        bpShowTimer.start()
         //        spo2ShowTimer.start()
+    }
+
+
+
+    function popupScuessShow()
+    {
+        updataSuccessd.open()
+        showTimer.start()
+        console.log("software updata Sucess")
+    }
+    function popupFailedShow()
+    {
+        updataFailed.open()
+        showTimer.start()
+        console.log("software updata failed")
+    }
+    function popupFileNotExistShow()
+    {
+        fileNotExist.open()
+        showTimer.start()
+        console.log("file not existed")
+    }
+    function popupRecordFileFailedShow()
+    {
+        //recordECGBKTxt = "记录心电"
+        //recordECGBKColor = "#d8d8d8"
+        bottomBtnRecordECGBKColor = "#d8d8d8"
+        bottomBtnRecordECGtxt = "记录心电"
+        if(m3DataControl.recordECGFlag === true)
+        {
+            m3DataControl.recordECGFlag = false
+        }
+        recordFileFailed.open()
+        showTimer.start()
+        console.log("Record File Failed")
     }
     /*
     property int warnHighLevelCount: 0     //高级别报警计数
@@ -1195,6 +1248,7 @@ Rectangle {
                     {
                         title.phsicWarnConten = phsicList[0]
                     }
+
                 }
 
                 if(bptooLowFlag>0) //低血压
@@ -1239,10 +1293,11 @@ Rectangle {
                     {
                         title.phsicWarnConten = phsicList[0]
                     }
+
                 }
+                bptooHightFlag = 0
+                bptooLowFlag=0
             }
-            spo2ValueLowFlag=0
-            bptooLowFlag=0
             break;
         case 21:     //导联脱落
             if(leadsDroppedFlag == 0) //当前没有导联脱落报警
@@ -1685,13 +1740,14 @@ Rectangle {
                     }
                     techList.splice(index,1) //删除list中的导联脱落报警相关的记录
                     warnListRemoveElement("手指未插入") //报警记录列表删除相应的记录
-                    if(techList.length ===0) //如果列表为0，关掉标题栏技术报警显示
+                    console.log("techList.length = "+techList.length)
+                    if(techList.length === 0) //如果列表为0，关掉标题栏技术报警显示
                     {
                         title.techWarnVisble = false
                     }
                     else
                     {
-                        techWarnConten = techList[0]
+                        title.techWarnConten = techList[0]
                     }
                 }
 
@@ -1736,7 +1792,7 @@ Rectangle {
                     }
                     else
                     {
-                        techWarnConten = techList[0]
+                        title.techWarnConten = techList[0]
                     }
                 }
 
@@ -2663,11 +2719,14 @@ Rectangle {
             }
             title.warnCountDownTime = countDownString
             warnPauseCountDownTimetmp  = warnPauseCountDownTimetmp -1
-            if(warnPauseCountDownTimetmp === 0)
+            if(warnPauseCountDownTimetmp === 0)  //报警暂停计时结束后
             {
-                title.warnCountDownTimeVisible = false
-                bottomBtn.warnPauseBKColor = "#d8d8d8"
-                m3DataControl.alarmSoundVolume(100);//暂停完毕，打开报警声音
+                if(m3DataControl.warnCloseFlag === false) //报警未暂停
+                {
+                    title.warnCountDownTimeVisible = false
+                    bottomBtn.warnPauseBKColor = "#d8d8d8"
+                    m3DataControl.alarmSoundVolume(100);//暂停完毕，打开报警声音
+                }
             }
         }
     }
@@ -2694,6 +2753,155 @@ Rectangle {
     {
         acPopup.open()
     }
+
+    Timer{
+        id: showTimer
+        interval: 1000
+        repeat: false
+        running: false
+        triggeredOnStart: false
+        onTriggered:
+        {
+            if(fileNotExist.opened === true)
+            {
+                fileNotExist.close()
+            }
+            if(updataFailed.opened === true)
+            {
+                updataFailed.close()
+            }
+            if(updataSuccessd.opened === true)
+            {
+                updataSuccessd.close()
+            }
+            if(recordFileFailed.opened === true)
+            {
+                recordFileFailed.close()
+            }
+        }
+    }
+
+
+
+    Popup{  //记录文件失败
+        id:recordFileFailed
+        x:320
+        y:280
+        width: 280
+        height: 100
+        leftMargin: 0
+        rightMargin: 0
+        topMargin: 0
+        bottomMargin: 0
+        leftPadding: 0
+        rightPadding: 0
+        topPadding: 0
+        bottomPadding: 0
+        Rectangle {
+            anchors.fill: parent
+            color: "#4d4141"
+            Text {
+                anchors.fill:parent
+                font.pixelSize: 30
+                color: "white"
+                text: "记录失败"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                anchors.centerIn: parent
+            }
+        }
+    }
+    Popup{  //警告提示信息 文件夹不存在
+        id:fileNotExist
+        x:320
+        y:280
+        width: 280
+        height: 100
+        leftMargin: 0
+        rightMargin: 0
+        topMargin: 0
+        bottomMargin: 0
+        leftPadding: 0
+        rightPadding: 0
+        topPadding: 0
+        bottomPadding: 0
+        Rectangle {
+            anchors.fill: parent
+            color: "#4d4141"
+            Text {
+                anchors.fill:parent
+                font.pixelSize: 30
+                color: "white"
+                text: "文件夹不存在"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                anchors.centerIn: parent
+            }
+        }
+    }
+
+
+    Popup{  //警告提示信息 软件更新失败
+        id:updataFailed
+        x:320
+        y:280
+        width: 280
+        height: 100
+        leftMargin: 0
+        rightMargin: 0
+        topMargin: 0
+        bottomMargin: 0
+        leftPadding: 0
+        rightPadding: 0
+        topPadding: 0
+        bottomPadding: 0
+        Rectangle {
+            anchors.fill: parent
+            color: "#4d4141"
+            Text {
+                anchors.fill:parent
+                font.pixelSize: 30
+                color: "white"
+                text: "软件更新失败"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                anchors.centerIn: parent
+            }
+        }
+    }
+
+
+    Popup{  //警告提示信息 软件更新成功
+        id:updataSuccessd
+        x:320
+        y:280
+        width: 280
+        height: 100
+        leftMargin: 0
+        rightMargin: 0
+        topMargin: 0
+        bottomMargin: 0
+        leftPadding: 0
+        rightPadding: 0
+        topPadding: 0
+        bottomPadding: 0
+        Rectangle {
+            anchors.fill: parent
+            color: "#4d4141"
+            Text {
+                anchors.fill:parent
+                font.pixelSize: 26
+                color: "white"
+                text: "更新成功,正在重启"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                anchors.centerIn: parent
+            }
+        }
+    }
+
+
+
     Popup{
         id:adultOrChildDialog
         width: 541

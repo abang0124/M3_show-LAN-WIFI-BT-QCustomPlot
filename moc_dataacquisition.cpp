@@ -22,8 +22,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_DataAcquisition_t {
-    QByteArrayData data[36];
-    char stringdata0[696];
+    QByteArrayData data[41];
+    char stringdata0[804];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -48,26 +48,31 @@ QT_MOC_LITERAL(12, 220, 20), // "BtClientDisconnected"
 QT_MOC_LITERAL(13, 241, 11), // "BtTransData"
 QT_MOC_LITERAL(14, 253, 3), // "buf"
 QT_MOC_LITERAL(15, 257, 19), // "bluetoothOpenResult"
-QT_MOC_LITERAL(16, 277, 7), // "dataAcq"
-QT_MOC_LITERAL(17, 285, 20), // "onRecNIBPStartSignal"
-QT_MOC_LITERAL(18, 306, 19), // "onRecNIBPStopSignal"
-QT_MOC_LITERAL(19, 326, 27), // "onRecordECGFlagChangeSignal"
-QT_MOC_LITERAL(20, 354, 23), // "onRecPatientTypeChanged"
-QT_MOC_LITERAL(21, 378, 11), // "patientType"
-QT_MOC_LITERAL(22, 390, 27), // "onRcvECGDataProcessedSignal"
-QT_MOC_LITERAL(23, 418, 31), // "onRecLeadsShowTypeChangedSignal"
-QT_MOC_LITERAL(24, 450, 10), // "readBatVal"
-QT_MOC_LITERAL(25, 461, 28), // "onDataAcquisitionThreadCreat"
-QT_MOC_LITERAL(26, 490, 12), // "startDataAcq"
-QT_MOC_LITERAL(27, 503, 19), // "onRecLP_typeChanged"
-QT_MOC_LITERAL(28, 523, 19), // "onRecHP_typeChanged"
-QT_MOC_LITERAL(29, 543, 19), // "onRecAC_typeChanged"
-QT_MOC_LITERAL(30, 563, 27), // "calculate_HR_and_emitSignal"
-QT_MOC_LITERAL(31, 591, 20), // "onRecUILoadCompleted"
-QT_MOC_LITERAL(32, 612, 25), // "onRecBtServerTransDataSig"
-QT_MOC_LITERAL(33, 638, 27), // "onRecM3DataShowCtlBtOpenSig"
-QT_MOC_LITERAL(34, 666, 13), // "BluetoothOpen"
-QT_MOC_LITERAL(35, 680, 15) // "BluetoothClosed"
+QT_MOC_LITERAL(16, 277, 21), // "softWareUpdataSuccess"
+QT_MOC_LITERAL(17, 299, 20), // "softWareUpdataFailed"
+QT_MOC_LITERAL(18, 320, 12), // "fileNotExist"
+QT_MOC_LITERAL(19, 333, 18), // "recordFileNotExist"
+QT_MOC_LITERAL(20, 352, 7), // "dataAcq"
+QT_MOC_LITERAL(21, 360, 20), // "onRecNIBPStartSignal"
+QT_MOC_LITERAL(22, 381, 19), // "onRecNIBPStopSignal"
+QT_MOC_LITERAL(23, 401, 27), // "onRecordECGFlagChangeSignal"
+QT_MOC_LITERAL(24, 429, 23), // "onRecPatientTypeChanged"
+QT_MOC_LITERAL(25, 453, 11), // "patientType"
+QT_MOC_LITERAL(26, 465, 27), // "onRcvECGDataProcessedSignal"
+QT_MOC_LITERAL(27, 493, 31), // "onRecLeadsShowTypeChangedSignal"
+QT_MOC_LITERAL(28, 525, 10), // "readBatVal"
+QT_MOC_LITERAL(29, 536, 28), // "onDataAcquisitionThreadCreat"
+QT_MOC_LITERAL(30, 565, 12), // "startDataAcq"
+QT_MOC_LITERAL(31, 578, 19), // "onRecLP_typeChanged"
+QT_MOC_LITERAL(32, 598, 19), // "onRecHP_typeChanged"
+QT_MOC_LITERAL(33, 618, 19), // "onRecAC_typeChanged"
+QT_MOC_LITERAL(34, 638, 27), // "calculate_HR_and_emitSignal"
+QT_MOC_LITERAL(35, 666, 20), // "onRecUILoadCompleted"
+QT_MOC_LITERAL(36, 687, 25), // "onRecBtServerTransDataSig"
+QT_MOC_LITERAL(37, 713, 27), // "onRecM3DataShowCtlBtOpenSig"
+QT_MOC_LITERAL(38, 741, 13), // "BluetoothOpen"
+QT_MOC_LITERAL(39, 755, 15), // "BluetoothClosed"
+QT_MOC_LITERAL(40, 771, 32) // "onRecM3DataShowupdateSoftWareSig"
 
     },
     "DataAcquisition\0NIBPData2M3DataControl\0"
@@ -77,8 +82,10 @@ QT_MOC_LITERAL(35, 680, 15) // "BluetoothClosed"
     "batValSignal\0leadOffSignal2M3DataControl\0"
     "BtClientConnected\0BtClientDisconnected\0"
     "BtTransData\0buf\0bluetoothOpenResult\0"
-    "dataAcq\0onRecNIBPStartSignal\0"
-    "onRecNIBPStopSignal\0onRecordECGFlagChangeSignal\0"
+    "softWareUpdataSuccess\0softWareUpdataFailed\0"
+    "fileNotExist\0recordFileNotExist\0dataAcq\0"
+    "onRecNIBPStartSignal\0onRecNIBPStopSignal\0"
+    "onRecordECGFlagChangeSignal\0"
     "onRecPatientTypeChanged\0patientType\0"
     "onRcvECGDataProcessedSignal\0"
     "onRecLeadsShowTypeChangedSignal\0"
@@ -88,7 +95,7 @@ QT_MOC_LITERAL(35, 680, 15) // "BluetoothClosed"
     "calculate_HR_and_emitSignal\0"
     "onRecUILoadCompleted\0onRecBtServerTransDataSig\0"
     "onRecM3DataShowCtlBtOpenSig\0BluetoothOpen\0"
-    "BluetoothClosed"
+    "BluetoothClosed\0onRecM3DataShowupdateSoftWareSig"
 };
 #undef QT_MOC_LITERAL
 
@@ -98,45 +105,50 @@ static const uint qt_meta_data_DataAcquisition[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      29,   14, // methods
+      34,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-      10,       // signalCount
+      14,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    2,  159,    2, 0x06 /* Public */,
-       4,    6,  164,    2, 0x06 /* Public */,
-       6,    1,  177,    2, 0x06 /* Public */,
-       7,    1,  180,    2, 0x06 /* Public */,
-       9,    2,  183,    2, 0x06 /* Public */,
-      10,    1,  188,    2, 0x06 /* Public */,
-      11,    0,  191,    2, 0x06 /* Public */,
-      12,    0,  192,    2, 0x06 /* Public */,
-      13,    1,  193,    2, 0x06 /* Public */,
-      15,    2,  196,    2, 0x06 /* Public */,
+       1,    2,  184,    2, 0x06 /* Public */,
+       4,    6,  189,    2, 0x06 /* Public */,
+       6,    1,  202,    2, 0x06 /* Public */,
+       7,    1,  205,    2, 0x06 /* Public */,
+       9,    2,  208,    2, 0x06 /* Public */,
+      10,    1,  213,    2, 0x06 /* Public */,
+      11,    0,  216,    2, 0x06 /* Public */,
+      12,    0,  217,    2, 0x06 /* Public */,
+      13,    1,  218,    2, 0x06 /* Public */,
+      15,    2,  221,    2, 0x06 /* Public */,
+      16,    0,  226,    2, 0x06 /* Public */,
+      17,    0,  227,    2, 0x06 /* Public */,
+      18,    0,  228,    2, 0x06 /* Public */,
+      19,    0,  229,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-      16,    0,  201,    2, 0x0a /* Public */,
-      17,    0,  202,    2, 0x0a /* Public */,
-      18,    0,  203,    2, 0x0a /* Public */,
-      19,    1,  204,    2, 0x0a /* Public */,
-      20,    1,  207,    2, 0x0a /* Public */,
-      22,    0,  210,    2, 0x0a /* Public */,
-      23,    1,  211,    2, 0x0a /* Public */,
-      24,    0,  214,    2, 0x0a /* Public */,
-      25,    0,  215,    2, 0x0a /* Public */,
-      26,    0,  216,    2, 0x0a /* Public */,
-      27,    1,  217,    2, 0x0a /* Public */,
-      28,    1,  220,    2, 0x0a /* Public */,
-      29,    1,  223,    2, 0x0a /* Public */,
-      30,    1,  226,    2, 0x0a /* Public */,
-      31,    0,  229,    2, 0x0a /* Public */,
-      32,    1,  230,    2, 0x0a /* Public */,
-      33,    1,  233,    2, 0x0a /* Public */,
-      34,    0,  236,    2, 0x0a /* Public */,
-      35,    0,  237,    2, 0x0a /* Public */,
+      20,    0,  230,    2, 0x0a /* Public */,
+      21,    0,  231,    2, 0x0a /* Public */,
+      22,    0,  232,    2, 0x0a /* Public */,
+      23,    1,  233,    2, 0x0a /* Public */,
+      24,    1,  236,    2, 0x0a /* Public */,
+      26,    0,  239,    2, 0x0a /* Public */,
+      27,    1,  240,    2, 0x0a /* Public */,
+      28,    0,  243,    2, 0x0a /* Public */,
+      29,    0,  244,    2, 0x0a /* Public */,
+      30,    0,  245,    2, 0x0a /* Public */,
+      31,    1,  246,    2, 0x0a /* Public */,
+      32,    1,  249,    2, 0x0a /* Public */,
+      33,    1,  252,    2, 0x0a /* Public */,
+      34,    1,  255,    2, 0x0a /* Public */,
+      35,    0,  258,    2, 0x0a /* Public */,
+      36,    1,  259,    2, 0x0a /* Public */,
+      37,    1,  262,    2, 0x0a /* Public */,
+      38,    0,  265,    2, 0x0a /* Public */,
+      39,    0,  266,    2, 0x0a /* Public */,
+      40,    0,  267,    2, 0x0a /* Public */,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3, 0x80000000 | 3,    2,    2,
@@ -149,13 +161,17 @@ static const uint qt_meta_data_DataAcquisition[] = {
     QMetaType::Void,
     QMetaType::Void, QMetaType::QByteArray,   14,
     QMetaType::Void, QMetaType::Bool, QMetaType::QString,    2,    2,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
 
  // slots: parameters
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void, QMetaType::Bool,    2,
-    QMetaType::Void, QMetaType::UChar,   21,
+    QMetaType::Void, QMetaType::UChar,   25,
     QMetaType::Void,
     QMetaType::Void, QMetaType::UChar,    2,
     QMetaType::Void,
@@ -169,6 +185,7 @@ static const uint qt_meta_data_DataAcquisition[] = {
     QMetaType::Void, QMetaType::Bool,    2,
     QMetaType::Void, QMetaType::Bool,    2,
     QMetaType::Bool,
+    QMetaType::Void,
     QMetaType::Void,
 
        0        // eod
@@ -190,26 +207,31 @@ void DataAcquisition::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
         case 7: _t->BtClientDisconnected(); break;
         case 8: _t->BtTransData((*reinterpret_cast< const QByteArray(*)>(_a[1]))); break;
         case 9: _t->bluetoothOpenResult((*reinterpret_cast< bool(*)>(_a[1])),(*reinterpret_cast< QString(*)>(_a[2]))); break;
-        case 10: _t->dataAcq(); break;
-        case 11: _t->onRecNIBPStartSignal(); break;
-        case 12: _t->onRecNIBPStopSignal(); break;
-        case 13: _t->onRecordECGFlagChangeSignal((*reinterpret_cast< bool(*)>(_a[1]))); break;
-        case 14: _t->onRecPatientTypeChanged((*reinterpret_cast< quint8(*)>(_a[1]))); break;
-        case 15: _t->onRcvECGDataProcessedSignal(); break;
-        case 16: _t->onRecLeadsShowTypeChangedSignal((*reinterpret_cast< quint8(*)>(_a[1]))); break;
-        case 17: _t->readBatVal(); break;
-        case 18: _t->onDataAcquisitionThreadCreat(); break;
-        case 19: _t->startDataAcq(); break;
-        case 20: _t->onRecLP_typeChanged((*reinterpret_cast< quint8(*)>(_a[1]))); break;
-        case 21: _t->onRecHP_typeChanged((*reinterpret_cast< quint8(*)>(_a[1]))); break;
-        case 22: _t->onRecAC_typeChanged((*reinterpret_cast< quint8(*)>(_a[1]))); break;
-        case 23: _t->calculate_HR_and_emitSignal((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 24: _t->onRecUILoadCompleted(); break;
-        case 25: _t->onRecBtServerTransDataSig((*reinterpret_cast< bool(*)>(_a[1]))); break;
-        case 26: _t->onRecM3DataShowCtlBtOpenSig((*reinterpret_cast< bool(*)>(_a[1]))); break;
-        case 27: { bool _r = _t->BluetoothOpen();
+        case 10: _t->softWareUpdataSuccess(); break;
+        case 11: _t->softWareUpdataFailed(); break;
+        case 12: _t->fileNotExist(); break;
+        case 13: _t->recordFileNotExist(); break;
+        case 14: _t->dataAcq(); break;
+        case 15: _t->onRecNIBPStartSignal(); break;
+        case 16: _t->onRecNIBPStopSignal(); break;
+        case 17: _t->onRecordECGFlagChangeSignal((*reinterpret_cast< bool(*)>(_a[1]))); break;
+        case 18: _t->onRecPatientTypeChanged((*reinterpret_cast< quint8(*)>(_a[1]))); break;
+        case 19: _t->onRcvECGDataProcessedSignal(); break;
+        case 20: _t->onRecLeadsShowTypeChangedSignal((*reinterpret_cast< quint8(*)>(_a[1]))); break;
+        case 21: _t->readBatVal(); break;
+        case 22: _t->onDataAcquisitionThreadCreat(); break;
+        case 23: _t->startDataAcq(); break;
+        case 24: _t->onRecLP_typeChanged((*reinterpret_cast< quint8(*)>(_a[1]))); break;
+        case 25: _t->onRecHP_typeChanged((*reinterpret_cast< quint8(*)>(_a[1]))); break;
+        case 26: _t->onRecAC_typeChanged((*reinterpret_cast< quint8(*)>(_a[1]))); break;
+        case 27: _t->calculate_HR_and_emitSignal((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 28: _t->onRecUILoadCompleted(); break;
+        case 29: _t->onRecBtServerTransDataSig((*reinterpret_cast< bool(*)>(_a[1]))); break;
+        case 30: _t->onRecM3DataShowCtlBtOpenSig((*reinterpret_cast< bool(*)>(_a[1]))); break;
+        case 31: { bool _r = _t->BluetoothOpen();
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
-        case 28: _t->BluetoothClosed(); break;
+        case 32: _t->BluetoothClosed(); break;
+        case 33: _t->onRecM3DataShowupdateSoftWareSig(); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -284,6 +306,34 @@ void DataAcquisition::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
                 return;
             }
         }
+        {
+            using _t = void (DataAcquisition::*)();
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&DataAcquisition::softWareUpdataSuccess)) {
+                *result = 10;
+                return;
+            }
+        }
+        {
+            using _t = void (DataAcquisition::*)();
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&DataAcquisition::softWareUpdataFailed)) {
+                *result = 11;
+                return;
+            }
+        }
+        {
+            using _t = void (DataAcquisition::*)();
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&DataAcquisition::fileNotExist)) {
+                *result = 12;
+                return;
+            }
+        }
+        {
+            using _t = void (DataAcquisition::*)();
+            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&DataAcquisition::recordFileNotExist)) {
+                *result = 13;
+                return;
+            }
+        }
     }
 }
 
@@ -316,13 +366,13 @@ int DataAcquisition::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 29)
+        if (_id < 34)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 29;
+        _id -= 34;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 29)
+        if (_id < 34)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 29;
+        _id -= 34;
     }
     return _id;
 }
@@ -393,6 +443,30 @@ void DataAcquisition::bluetoothOpenResult(bool _t1, QString _t2)
 {
     void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(&_t1)), const_cast<void*>(reinterpret_cast<const void*>(&_t2)) };
     QMetaObject::activate(this, &staticMetaObject, 9, _a);
+}
+
+// SIGNAL 10
+void DataAcquisition::softWareUpdataSuccess()
+{
+    QMetaObject::activate(this, &staticMetaObject, 10, nullptr);
+}
+
+// SIGNAL 11
+void DataAcquisition::softWareUpdataFailed()
+{
+    QMetaObject::activate(this, &staticMetaObject, 11, nullptr);
+}
+
+// SIGNAL 12
+void DataAcquisition::fileNotExist()
+{
+    QMetaObject::activate(this, &staticMetaObject, 12, nullptr);
+}
+
+// SIGNAL 13
+void DataAcquisition::recordFileNotExist()
+{
+    QMetaObject::activate(this, &staticMetaObject, 13, nullptr);
 }
 QT_WARNING_POP
 QT_END_MOC_NAMESPACE

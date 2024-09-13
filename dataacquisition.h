@@ -16,7 +16,7 @@
 #include <QTcpSocket>
 #include <QHostAddress>
 #include <QNetworkConfigurationManager>  //检测网线是否插入
-
+#include <QProcess>
 #include <QTcpServer> //将M3定义为数据的服务器
 #include <QBluetoothLocalDevice>  //蓝牙设备本地类
 #include <QBluetoothDeviceInfo>   //蓝牙设备信息类
@@ -146,6 +146,7 @@ public:
     QByteArray socketReadBuf;
     QTcpServer *ts; //
     QString str;
+    int serialPortRecLength = 0;
 //蓝牙传输相关的变量
     bool btTransDataFlag = false;  //使用蓝牙传输数据的标志位 默认为false
     //QBluetoothLocalDevice *localBluetoothDevice; //本地蓝牙设备
@@ -168,6 +169,12 @@ signals:
 //    void BtOpenSuccessed(); //蓝牙打开成功
 //    void BtOpenFailed();    //蓝牙打开失败
     void bluetoothOpenResult(bool,QString);//蓝牙打开结果的信号 并传递蓝牙的mac地址
+
+
+    void softWareUpdataSuccess();//软件更新成功
+    void softWareUpdataFailed();//软件更新失败
+    void fileNotExist(); //文件不存在
+    void recordFileNotExist();//记录文件设备不存在
 
 public slots:
     void dataAcq();       //数据采集,读取串口数据
@@ -194,6 +201,9 @@ public slots:
     void onRecM3DataShowCtlBtOpenSig(bool); //用来接受蓝牙开或者关的信号
     bool BluetoothOpen();  //蓝牙打开
     void BluetoothClosed(); //蓝牙关闭
+
+
+    void onRecM3DataShowupdateSoftWareSig(void);
 //    void onRecBtServerBtOpenSuccess(); //用来接收蓝牙打开成功的信号
 //    void onRecBtServerBtOpenFailed(); //用来接收蓝牙打开成功的信号
 

@@ -202,20 +202,21 @@ void DataAcquisition::SerialPortInit()
     acqusitionPort->setDataBits(QSerialPort::Data8);
     acqusitionPort->setStopBits(QSerialPort::OneStop);
     acqusitionPort->setFlowControl(QSerialPort::NoFlowControl);
-    //connect(acqusitionPort, SIGNAL(readyRead()),this, SLOT(serialport_recive_data()));
+    //qDebug()<<"The ReadBufferSize is "<<acqusitionPort->readBufferSize();
+    acqusitionPort->setReadBufferSize(50000);
+    /***********************测试心电丢数用*******************/
+    //connect(acqusitionPort, SIGNAL(readyRead()),this, SLOT(dataAcq()));
+    /***********************测试心电丢数用*******************/
 }
 
 void DataAcquisition::startDataAcq() //线程任务函数//尝试数据采集方式：1定时器定时采集 2串口对象的readyRead信号//线程的入口函数
 {
 
     tm = new QTimer(this);
-    tm->setInterval(30);
+    tm->setInterval(20);
     tm->setTimerType(Qt::PreciseTimer);
     connect(tm,SIGNAL(timeout()),this,SLOT(dataAcq())); //定时器信号
     tm->start();
-
-    //filestream->setDevice(ecgfile);
-    //connect(acqusitionPort,SIGNAL(readyRead()),this,SLOT(dataAcq())); //串口readyRead 信号
 }
 
 void DataAcquisition::onRecLP_typeChanged(quint8 value)
@@ -289,7 +290,10 @@ void DataAcquisition::onRecUILoadCompleted() //接收到界面加载完成的信
         QMessageBox::about(NULL, "错误",
                            "串口无法打开！可能串口已经被占用！");//打开串口
     }
+    /***********************测试心电丢数用*******************/
+
     startDataAcq(); //打开定时器，开始定时从串口读数据
+    /***********************测试心电丢数用*******************/
     ECGDataRevProcessedFlag = true;
     QByteArray data = "ECGstart\r\n";
     acqusitionPort->write(data); //心电图开始测量
@@ -576,6 +580,36 @@ void DataAcquisition::onRecUILoadCompleted() //接收到界面加载完成的信
 
  }
 
+ void DataAcquisition::onRecM3DataShowupdateSoftWareSig() //软件更新函数
+ {
+    //"/media/usb0/data"
+    QString soureFile = "/media/usb0/softWareUpdata/M3_show";
+    QString desFile ="/demo/M3_show";
+    if(QFile::exists(soureFile))
+    {
+        QFile file(desFile);
+       if (file.exists())
+       {
+           file.remove();
+
+       }
+       if(QFile::copy(soureFile,desFile))
+       {
+           QProcess::startDetached("chmod +x /demo/M3_show");
+           emit softWareUpdataSuccess();//软件更新成功
+           QProcess::startDetached("reboot");
+       }
+       else{
+           emit softWareUpdataFailed(); //软件更新失败
+       }
+    }
+    else{
+
+        emit fileNotExist(); //文件不存在
+    }
+
+ }
+
 void DataAcquisition::onRecBtServerTransDataSig(bool flag) //用来接受使用蓝牙传输数据的标志位
 {
      btTransDataFlag = flag;
@@ -627,10 +661,32 @@ void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进�
     int endFlagCount = 0;
     bool startFlag = false;
     int dataLength = 0;
+    int nextLength = 0;
     quint8 dataSum = 0,calDataSum = 0;
+
     leftDataArray.clear(); //每次进入清理该ByteArray容器
+
+    if(serialPortRecLength != buf.length())
+    {
+        qDebug()<<"serialPortRecLength = "<<serialPortRecLength;
+        qDebug()<<"RecBuf.Length = "<<buf.length();
+
+    }
+
+    /**********************************************测试丢数用*********************************************/
+    if(recordECGFlag == true)
+    {
+        for (int i =0;i< buf.length();i++)
+        {
+            //*orifilestream<<QString::number(buf[i],16);
+            *orifilestream<<QString("%1").arg(buf[i],2,16,QLatin1Char('0'));
+        }
+    }
+
+    /**********************************************测试丢数用*********************************************/
     for (int i = 0;i<buf.length();i++)  //整个大循环中寻找有用的数据，心电数据，血氧数据，血压数据，导联脱落数据
     {
+        checkMark:
         if((buf[i]=='\xFE')&&(buf[i+1]=='\xFE')&&(buf[i+2]=='\xFE')&&(startFlag == false))//先判断开始位 第一次寻找帧头
         {
             startFlag = true;
@@ -641,9 +697,10 @@ void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进�
         {
             endFlagCount = i;
             dataLength = endFlagCount-startFlagCount-1;
-            checkMark:
             dataSum = buf[startFlagCount+1];
+            //qDebug()<<"dataSum = "<<dataSum<<"dataLength = "<<dataLength;
             calDataSum = 0;
+            //qDebug()<<"startFlagCount1 = "<<startFlagCount<<"endFlagCount1 = "<<endFlagCount;
             if((buf[startFlagCount] == '\x01')&&(dataLength == 49))//心电数据 49 = 48 + 1 有效数据长度为48
             {
                 for (int sumCount = 0;sumCount<48;sumCount++)
@@ -675,13 +732,13 @@ void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进�
                         {
                             if(j!=11)
                             {
-                                *orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<'\t';
+                                //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<'\t';
 
                                 //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<'\t';
 
                             }
                             else{
-                                *orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<endl;
+                                //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<endl;
 
                                 //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<endl;
 
@@ -706,7 +763,11 @@ void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进�
                 }
                 else{
                     qDebug()<<"ECG Wrong ECG Data";//<<QString::number(dataSum,16)<<","<<QString::number(calDataSum,16);
-                    startFlagCount = endFlagCount+3; //标记下一次的起始位置
+                    //qDebug()<<"startFlagCount = "<<startFlagCount<<"buf.length() = "<<buf.length();
+                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
+                    i = endFlagCount;
+                    startFlag = false;
+                    //qDebug()<<"startFlagCount = "<<startFlagCount<<"endFlagCount = "<<endFlagCount;
                     goto checkMark;
                    //dataSum = buf[startFlagCount+1];
                    //qDebug()<<"The dataSum = "<<QString::number(buf[startFlagCount+1],16);
@@ -737,7 +798,9 @@ void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进�
                 }
                 else {
                     qDebug()<<"SPO2 wrong data";
-                    startFlagCount = endFlagCount+3; //标记下一次的起始位置
+                    i = endFlagCount;
+                    startFlag = false;
+                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
                     goto checkMark;
                 }
             }
@@ -759,13 +822,23 @@ void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进�
                     {
                         emit NIBPData2M3DataControl(&M3_BP_sys_data,&M3_BP_dia_data);
                     }
+                    if(M3_BP_sys_data.length()>2)
+                    {
+                       M3_BP_sys_data.takeLast();
+                    }
+                    if(M3_BP_dia_data.length()>2)
+                    {
+                       M3_BP_dia_data.takeLast();
+                    }
                     qDebug()<<"dataLength = "<<dataLength;
                     qDebug()<<"sys = "<<M3_BP_sys_data<<"dia = "<<M3_BP_dia_data;
                     qDebug()<<"recived the BP result";
                 }
                 else {
                     qDebug()<<"BP wrong data";
-                    startFlagCount = endFlagCount+3; //标记下一次的起始位置
+                    i = endFlagCount;
+                    startFlag = false;
+                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
                     goto checkMark;
                 }
             }
@@ -888,7 +961,9 @@ void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进�
                 }
                 else {
                     qDebug()<<"leadOff wrong data";
-                    startFlagCount = endFlagCount+3; //标记下一次的起始位置
+                    i = endFlagCount;
+                    startFlag = false;
+                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
                     goto checkMark;
                 }
     //            if(statusN&0x04)//第三通道的负输入 //会误报  暂时屏蔽掉该报警20230911
@@ -906,15 +981,35 @@ void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进�
             }
 
             startFlagCount = endFlagCount+3; //标记下一次的起始位置
-            dataSum = buf[startFlagCount+1];
-            if(startFlagCount>buf.length()) //如果startFlagCount比总的数据长度还大，那么已经接近数据结束
+
+            if(buf[startFlagCount] == '\x01')
             {
-                int ii = endFlagCount;
-                for(ii = endFlagCount;ii<buf.length();ii++)
+                nextLength = startFlagCount + 49; //校验和1位+48个字节
+            }
+            else if(buf[startFlagCount] == '\x02')
+            {
+                nextLength = startFlagCount + 7;//校验和1位+6个字节
+            }
+            else if(buf[startFlagCount] == '\x03')
+            {
+                nextLength = startFlagCount + 13; //校验和1位+12个字节
+            }
+            else if(buf[startFlagCount] == '\x04')
+            {
+                nextLength = startFlagCount + 3;//校验和1位+2个字节
+            }
+            if(nextLength >buf.length()) //如果nextLength比总的数据长度还大，那么已经接近数据结束
+            {
+                //int ii = endFlagCount;
+                for(int ii = endFlagCount;ii<buf.length();ii++)
                 {
                     leftDataArray.append(buf[ii]);
                 }
+                //qDebug()<<"left Data"<<nextLength -buf.length();
                 break;
+            }
+            else{//如果在范围内，获取校验和的值
+                dataSum = buf[startFlagCount+1];
             }
 
         }
@@ -1307,6 +1402,7 @@ void DataAcquisition::dataAcq()//槽函数,读取串口的数据
 //        qDebug()<<"revive length is "<<buf.length();
 //        qDebug()<<buf.toHex()<<endl;
 //    }
+
     if(netConnectedFlag)  //使用有线和wifi传输数据
     {
         dataSocket->write(buf);//将读取到的数据，全部通过网线传递给电脑
@@ -1316,24 +1412,25 @@ void DataAcquisition::dataAcq()//槽函数,读取串口的数据
     {
         emit BtTransData(buf);
     }
-
+    serialPortRecLength = buf.length();
+            //AcqDataAnalyse(buf);
 
     if(leftDataArray.length() == 0)
     {
+        //qDebug()<<"buf.length = "<<buf.length();
+        serialPortRecLength = buf.length();
         AcqDataAnalyse(buf);
+
     }
     else
     {
-        int leftLen = leftDataArray.length();
-        for(int i =0;i<leftLen;i++)
-        {
-            bufAll.append(leftDataArray[i]);
-        }
+
+        bufAll.clear();
+        bufAll.append(leftDataArray);
         leftDataArray.clear();
-        for(int z = 0;z<buf.length();z++)
-        {
-            bufAll.append(buf[z]);
-        }
+        bufAll.append(buf);
+        //qDebug()<<"bufAll.length = "<<bufAll.length();
+        serialPortRecLength = bufAll.length();
         AcqDataAnalyse(bufAll);
     }
 
@@ -1343,6 +1440,8 @@ void DataAcquisition::onRecNIBPStartSignal()
 {
     QByteArray data = "BPstart\r\n";
     acqusitionPort->write(data); //血压开始测量
+//    QByteArray data = "test1\r\n";
+//    acqusitionPort->write(data);
 
 }
 
@@ -1351,6 +1450,8 @@ void DataAcquisition::onRecNIBPStopSignal()
     QByteArray data = "BPstop\r\n";
     acqusitionPort->write(data); //血压停止测量
     //qDebug()<<"BPStop Transmitted";
+//    QByteArray data = "test2\r\n";
+//    acqusitionPort->write(data);
 }
 
 //void DataAcquisition::onECG3or12Changed(bool value) //12导联的显示模式 2*6还是3*4 value = ture 3*4
@@ -1364,63 +1465,73 @@ void DataAcquisition::onRecordECGFlagChangeSignal(bool value)
 {
     //
     QString cmd;
-    recordECGFlag = value;
+    //recordECGFlag = value;
     if(value == true) //开始记录心电数据
     {
         //打开一个以当前时间命名的文件，将心电数据存入该文件中
         QString filePath = "/media/usb0/data";
-        bool ret;
-        QString timestring = QDateTime::currentDateTime().toString("yy-MM-dd hh-mm-ss");
-        QString oridataString;
-        //oridataString = "/test/data/ori"+timestring;//存储在核心板上
-        //timestring = "/test/data/"+timestring;//存储在核心板上
-        oridataString = filePath+"/ori"+timestring;//存储在核心板上
-        timestring =  filePath+"/"+timestring;//存储在核心板上
-
-        //timestring = filePath+"/ECG"+timestring; //存储在U盘上
-//        QDir dir(filePath);
-
-//        if( !dir.exists() )
-//        {
-//            if( dir.mkpath(filePath) )
-//            {
-//                qDebug()<<"create dir:"<<filePath;
-//            }
-//        }
-//        else{
-//             qDebug()<<filePath<<"exist;";
-//        }
-
-        oriecgfile = new QFile(oridataString);
-        ret = oriecgfile->open(QIODevice::ReadWrite|QIODevice::Text);
-        if(ret == true)
+        QDir dir(filePath);
+        if(dir.exists())//如果文件夹存在
         {
-            qDebug()<<"ori open file sucess";
+            bool ret;
+            recordECGFlag = value;
+            QString timestring = QDateTime::currentDateTime().toString("yy-MM-dd hh-mm-ss");
+            QString oridataString;
+            //oridataString = "/test/data/ori"+timestring;//存储在核心板上
+            //timestring = "/test/data/"+timestring;//存储在核心板上
+            oridataString = filePath+"/ori"+timestring;//存储在核心板上
+            timestring =  filePath+"/"+timestring;//存储在核心板上
+
+            //timestring = filePath+"/ECG"+timestring; //存储在U盘上
+            //        QDir dir(filePath);
+
+            //        if( !dir.exists() )
+            //        {
+            //            if( dir.mkpath(filePath) )
+            //            {
+            //                qDebug()<<"create dir:"<<filePath;
+            //            }
+            //        }
+            //        else{
+            //             qDebug()<<filePath<<"exist;";
+            //        }
+
+            oriecgfile = new QFile(oridataString);
+            ret = oriecgfile->open(QIODevice::ReadWrite|QIODevice::Text);
+            if(ret == true)
+            {
+                qDebug()<<"ori open file sucess";
+            }
+            else {
+                qDebug()<<"ori open file failed";
+            }
+
+
+            ecgfile = new QFile(timestring);
+
+            ret = ecgfile->open(QIODevice::ReadWrite|QIODevice::Text);
+            if(ret == true)
+            {
+                qDebug()<<"open file sucess";
+            }
+            else {
+                qDebug()<<"open file failed";
+            }
+            filestream->setDevice(ecgfile);
+
+            //存储原始数据
+
+            orifilestream ->setDevice(oriecgfile);
         }
-        else {
-            qDebug()<<"ori open file failed";
+        else{  //如果文件夹不存在
+            recordECGFlag = false;
+            emit recordFileNotExist(); //记录文件设备不存在
         }
-
-
-        ecgfile = new QFile(timestring);
-
-        ret = ecgfile->open(QIODevice::ReadWrite|QIODevice::Text);
-        if(ret == true)
-        {
-            qDebug()<<"open file sucess";
-        }
-        else {
-            qDebug()<<"open file failed";
-        }
-        filestream->setDevice(ecgfile);
-
-        //存储原始数据
-
-        orifilestream ->setDevice(oriecgfile);
     }
     else             //结束记录心电数据
     {
         //关掉打开的文件
+        recordECGFlag = false;
         filestream->flush();
         ecgfile->close();
 

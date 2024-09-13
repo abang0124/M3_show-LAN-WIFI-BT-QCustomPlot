@@ -209,10 +209,10 @@ Rectangle {
             }
         }
 
-        m3DataControl.bpSYSThresHoldLevelChanged.connect(changeBPSYSWarnLevel)
-        m3DataControl.bpDIAThresHoldLevelChanged.connect(changeBPDIAWarnLevel)
-        m3DataControl.bpSYSThresHoldLevelChangedWide.connect(changeBPSYSWarnLevelWide)
-        m3DataControl.bpDIAThresHoldLevelChangedWide.connect(changeBPDIAWarnLevelWide)
+        m3DataControl.bpSYSThresHoldLevelChanged.connect(changeBPSYSWarnLevel)  //窄阈值收缩压报警级别改变
+        m3DataControl.bpDIAThresHoldLevelChanged.connect(changeBPDIAWarnLevel)  //窄阈值舒张压报警级别改变
+        m3DataControl.bpSYSThresHoldLevelChangedWide.connect(changeBPSYSWarnLevelWide)  //宽阈值收缩压报警级别改变
+        m3DataControl.bpDIAThresHoldLevelChangedWide.connect(changeBPDIAWarnLevelWide)  //宽阈值舒张压报警级别改变
 
         m3DataControl.bpSYSThresHoldValueHChanged.connect(changeBPSYSWarnValue)
         m3DataControl.bpDIAThresHoldValueHChanged.connect(changeBPDIAWarnValue)
