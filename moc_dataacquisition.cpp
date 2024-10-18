@@ -22,8 +22,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_DataAcquisition_t {
-    QByteArrayData data[41];
-    char stringdata0[804];
+    QByteArrayData data[42];
+    char stringdata0[829];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -72,7 +72,8 @@ QT_MOC_LITERAL(36, 687, 25), // "onRecBtServerTransDataSig"
 QT_MOC_LITERAL(37, 713, 27), // "onRecM3DataShowCtlBtOpenSig"
 QT_MOC_LITERAL(38, 741, 13), // "BluetoothOpen"
 QT_MOC_LITERAL(39, 755, 15), // "BluetoothClosed"
-QT_MOC_LITERAL(40, 771, 32) // "onRecM3DataShowupdateSoftWareSig"
+QT_MOC_LITERAL(40, 771, 32), // "onRecM3DataShowupdateSoftWareSig"
+QT_MOC_LITERAL(41, 804, 24) // "BTOnRecBPStartORStopSlot"
 
     },
     "DataAcquisition\0NIBPData2M3DataControl\0"
@@ -95,7 +96,8 @@ QT_MOC_LITERAL(40, 771, 32) // "onRecM3DataShowupdateSoftWareSig"
     "calculate_HR_and_emitSignal\0"
     "onRecUILoadCompleted\0onRecBtServerTransDataSig\0"
     "onRecM3DataShowCtlBtOpenSig\0BluetoothOpen\0"
-    "BluetoothClosed\0onRecM3DataShowupdateSoftWareSig"
+    "BluetoothClosed\0onRecM3DataShowupdateSoftWareSig\0"
+    "BTOnRecBPStartORStopSlot"
 };
 #undef QT_MOC_LITERAL
 
@@ -105,7 +107,7 @@ static const uint qt_meta_data_DataAcquisition[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      34,   14, // methods
+      35,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -113,42 +115,43 @@ static const uint qt_meta_data_DataAcquisition[] = {
       14,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    2,  184,    2, 0x06 /* Public */,
-       4,    6,  189,    2, 0x06 /* Public */,
-       6,    1,  202,    2, 0x06 /* Public */,
-       7,    1,  205,    2, 0x06 /* Public */,
-       9,    2,  208,    2, 0x06 /* Public */,
-      10,    1,  213,    2, 0x06 /* Public */,
-      11,    0,  216,    2, 0x06 /* Public */,
-      12,    0,  217,    2, 0x06 /* Public */,
-      13,    1,  218,    2, 0x06 /* Public */,
-      15,    2,  221,    2, 0x06 /* Public */,
-      16,    0,  226,    2, 0x06 /* Public */,
-      17,    0,  227,    2, 0x06 /* Public */,
-      18,    0,  228,    2, 0x06 /* Public */,
-      19,    0,  229,    2, 0x06 /* Public */,
+       1,    2,  189,    2, 0x06 /* Public */,
+       4,    6,  194,    2, 0x06 /* Public */,
+       6,    1,  207,    2, 0x06 /* Public */,
+       7,    1,  210,    2, 0x06 /* Public */,
+       9,    2,  213,    2, 0x06 /* Public */,
+      10,    1,  218,    2, 0x06 /* Public */,
+      11,    0,  221,    2, 0x06 /* Public */,
+      12,    0,  222,    2, 0x06 /* Public */,
+      13,    1,  223,    2, 0x06 /* Public */,
+      15,    2,  226,    2, 0x06 /* Public */,
+      16,    0,  231,    2, 0x06 /* Public */,
+      17,    0,  232,    2, 0x06 /* Public */,
+      18,    0,  233,    2, 0x06 /* Public */,
+      19,    0,  234,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-      20,    0,  230,    2, 0x0a /* Public */,
-      21,    0,  231,    2, 0x0a /* Public */,
-      22,    0,  232,    2, 0x0a /* Public */,
-      23,    1,  233,    2, 0x0a /* Public */,
-      24,    1,  236,    2, 0x0a /* Public */,
-      26,    0,  239,    2, 0x0a /* Public */,
-      27,    1,  240,    2, 0x0a /* Public */,
-      28,    0,  243,    2, 0x0a /* Public */,
-      29,    0,  244,    2, 0x0a /* Public */,
-      30,    0,  245,    2, 0x0a /* Public */,
-      31,    1,  246,    2, 0x0a /* Public */,
-      32,    1,  249,    2, 0x0a /* Public */,
-      33,    1,  252,    2, 0x0a /* Public */,
-      34,    1,  255,    2, 0x0a /* Public */,
-      35,    0,  258,    2, 0x0a /* Public */,
-      36,    1,  259,    2, 0x0a /* Public */,
-      37,    1,  262,    2, 0x0a /* Public */,
-      38,    0,  265,    2, 0x0a /* Public */,
-      39,    0,  266,    2, 0x0a /* Public */,
-      40,    0,  267,    2, 0x0a /* Public */,
+      20,    0,  235,    2, 0x0a /* Public */,
+      21,    0,  236,    2, 0x0a /* Public */,
+      22,    0,  237,    2, 0x0a /* Public */,
+      23,    1,  238,    2, 0x0a /* Public */,
+      24,    1,  241,    2, 0x0a /* Public */,
+      26,    0,  244,    2, 0x0a /* Public */,
+      27,    1,  245,    2, 0x0a /* Public */,
+      28,    0,  248,    2, 0x0a /* Public */,
+      29,    0,  249,    2, 0x0a /* Public */,
+      30,    0,  250,    2, 0x0a /* Public */,
+      31,    1,  251,    2, 0x0a /* Public */,
+      32,    1,  254,    2, 0x0a /* Public */,
+      33,    1,  257,    2, 0x0a /* Public */,
+      34,    1,  260,    2, 0x0a /* Public */,
+      35,    0,  263,    2, 0x0a /* Public */,
+      36,    1,  264,    2, 0x0a /* Public */,
+      37,    1,  267,    2, 0x0a /* Public */,
+      38,    0,  270,    2, 0x0a /* Public */,
+      39,    0,  271,    2, 0x0a /* Public */,
+      40,    0,  272,    2, 0x0a /* Public */,
+      41,    1,  273,    2, 0x0a /* Public */,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3, 0x80000000 | 3,    2,    2,
@@ -187,6 +190,7 @@ static const uint qt_meta_data_DataAcquisition[] = {
     QMetaType::Bool,
     QMetaType::Void,
     QMetaType::Void,
+    QMetaType::Void, QMetaType::Bool,    2,
 
        0        // eod
 };
@@ -232,6 +236,7 @@ void DataAcquisition::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int 
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
         case 32: _t->BluetoothClosed(); break;
         case 33: _t->onRecM3DataShowupdateSoftWareSig(); break;
+        case 34: _t->BTOnRecBPStartORStopSlot((*reinterpret_cast< bool(*)>(_a[1]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -366,13 +371,13 @@ int DataAcquisition::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 34)
+        if (_id < 35)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 34;
+        _id -= 35;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 34)
+        if (_id < 35)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 34;
+        _id -= 35;
     }
     return _id;
 }

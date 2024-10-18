@@ -71,7 +71,7 @@ Rectangle {
                     leadsPageIndex = 2
                 }
                 leadOffShow(leadsPageIndex)
-                clearAllLines()
+                //clearAllLines()
 
                 replaceFlag = false
 
@@ -134,7 +134,7 @@ Rectangle {
                     lead3txt.text = "III"
                     leadsPageIndex = 0
                 }
-                clearAllLines()
+                //clearAllLines()
                 leadOffShow(leadsPageIndex)
                 replaceFlag = false
 
@@ -791,13 +791,13 @@ Rectangle {
 
     function clearAllLines()
     {
-        for(var i=0;i<threeLeadsSplineSeriesArray.length;i++)
-        {
-            for(var j=0;j<threeLeadsSplineSeriesArray[i].length;j++)
-            {
-                threeLeadsSplineSeriesArray[i][j].clear()
-            }
-        }
+//        for(var i=0;i<threeLeadsSplineSeriesArray.length;i++)
+//        {
+//            for(var j=0;j<threeLeadsSplineSeriesArray[i].length;j++)
+//            {
+//                threeLeadsSplineSeriesArray[i][j].clear()
+//            }
+//        }
     }
 
 

@@ -195,6 +195,16 @@ void BluetoothServer::readSocket()
         emit bluetoothStartTranDataFlag(false);//结束通过蓝牙传数据
         //netConnectedFlag = false;
     }
+    else if(str == "BPstart\r\n")
+    {
+        emit BPStartORStopSig(true);
+
+    }
+    else if(str == "BPstop\r\n")
+    {
+        emit BPStartORStopSig(false);
+    }
+
 
 //    while (socket->canReadLine()) {
 //        QByteArray line = socket->readLine().trimmed();

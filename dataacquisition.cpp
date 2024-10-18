@@ -122,6 +122,16 @@ void DataAcquisition::onDataAcquisitionThreadCreat()  //该函数中所有的对
             {
                 netConnectedFlag = false;
             }
+            else if(str == "BPstart\r\n") //添加血压开始测量的接口
+            {
+                QByteArray data = "BPstart\r\n";
+                acqusitionPort->write(data); //血压开始测量
+            }
+            else if(str == "BPstop\r\n")  //添加血压结束测量的接口
+            {
+                QByteArray data = "BPstop\r\n";
+                acqusitionPort->write(data); //血压停止测量
+            }
         });
         connect(dataSocket,&QTcpSocket::disconnected,this,[=]{
             netConnectedFlag = false;
@@ -183,6 +193,7 @@ void DataAcquisition::onDataAcquisitionThreadCreat()  //该函数中所有的对
     //测试串口读到的ECG数据，将数据存储到文件中
     filestream = new QTextStream();
     orifilestream = new QTextStream();
+    testorifilestream = new QTextStream(); //测试丢数用
     btServer = new BluetoothServer();
     //创造新的电池类
     bat = new Battery();
@@ -197,13 +208,15 @@ void DataAcquisition::onDataAcquisitionThreadCreat()  //该函数中所有的对
 void DataAcquisition::SerialPortInit()
 {
     acqusitionPort->setPortName("ttyS3"); //打开串口ttyS3
-    acqusitionPort->setBaudRate(921600);
+    //acqusitionPort->setBaudRate(921600);
+    //acqusitionPort->setBaudRate(1500000);
+    acqusitionPort->setBaudRate(2000000);
     acqusitionPort->setParity(QSerialPort::NoParity);
     acqusitionPort->setDataBits(QSerialPort::Data8);
     acqusitionPort->setStopBits(QSerialPort::OneStop);
     acqusitionPort->setFlowControl(QSerialPort::NoFlowControl);
     //qDebug()<<"The ReadBufferSize is "<<acqusitionPort->readBufferSize();
-    acqusitionPort->setReadBufferSize(50000);
+    acqusitionPort->setReadBufferSize(10000);
     /***********************测试心电丢数用*******************/
     //connect(acqusitionPort, SIGNAL(readyRead()),this, SLOT(dataAcq()));
     /***********************测试心电丢数用*******************/
@@ -213,10 +226,18 @@ void DataAcquisition::startDataAcq() //线程任务函数//尝试数据采集方
 {
 
     tm = new QTimer(this);
-    tm->setInterval(20);
+    tm->setInterval(10);
     tm->setTimerType(Qt::PreciseTimer);
     connect(tm,SIGNAL(timeout()),this,SLOT(dataAcq())); //定时器信号
     tm->start();
+
+
+    //测试心电丢数用
+    //testtm = new QTimer(this);
+    //testtm->setInterval(1);
+    //testtm->setTimerType(Qt::PreciseTimer);
+    //connect(testtm,SIGNAL(timeout()),this,SLOT(sendSerialDataSlot())); //定时器信号
+    //testtm->start();
 }
 
 void DataAcquisition::onRecLP_typeChanged(quint8 value)
@@ -290,10 +311,7 @@ void DataAcquisition::onRecUILoadCompleted() //接收到界面加载完成的信
         QMessageBox::about(NULL, "错误",
                            "串口无法打开！可能串口已经被占用！");//打开串口
     }
-    /***********************测试心电丢数用*******************/
-
     startDataAcq(); //打开定时器，开始定时从串口读数据
-    /***********************测试心电丢数用*******************/
     ECGDataRevProcessedFlag = true;
     QByteArray data = "ECGstart\r\n";
     acqusitionPort->write(data); //心电图开始测量
@@ -558,6 +576,7 @@ void DataAcquisition::onRecUILoadCompleted() //接收到界面加载完成的信
          connect(btServer,&BluetoothServer::clientDisconnectedSig,this,&DataAcquisition::BtClientDisconnected); //客户端断开的信号 信号传信号
          connect(btServer,&BluetoothServer::bluetoothStartTranDataFlag,this,&DataAcquisition::onRecBtServerTransDataSig);   //接收现在是否使用蓝牙传输数据
          connect(this,&DataAcquisition::BtTransData,btServer,&BluetoothServer::sendMessage);  //蓝牙传输数据。解决多线程报错的问题
+         connect(btServer,&BluetoothServer::BPStartORStopSig,this,&DataAcquisition::BTOnRecBPStartORStopSlot);//血压开始测量与停止测量
          return true;
      }
      else{
@@ -610,6 +629,43 @@ void DataAcquisition::onRecUILoadCompleted() //接收到界面加载完成的信
 
  }
 
+ void DataAcquisition::BTOnRecBPStartORStopSlot(bool value)
+ {
+     if(value == true)
+     {
+         QByteArray data = "BPstart\r\n";
+         acqusitionPort->write(data); //血压开始测量
+
+     }
+     else if(value == false)
+     {
+
+         QByteArray data = "BPstop\r\n";
+         acqusitionPort->write(data); //血压开始测量
+     }
+ }
+
+// void DataAcquisition::sendSerialDataSlot() //测试串口丢数据函数，测试完成，删掉此函数
+// {
+//     quint8 testArray[53] = {0xFE,0xFE,0xFE,0x01,0xE5,0x00,0x00,0x00,0x00,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0xFC,0x00,0x00,0xff,0xFC,0x00,0x00,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff};
+//     //testByteArray = {0xFE,0xFE,0xFE,0x01,0xE5,0x00,0x00,0x00,0x00,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0xFC,0x00,0x00,0xff,0xFC,0x00,0x00,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff,0x00,0x7f,0xff,0xff};
+
+//     testArray[5] = times;
+//     testArray[6] = times;
+//     testArray[7] = times;
+//     testArray[8] = times;
+//     testByteArray.clear();
+//     for (int i =0;i<53;i++) {
+//         testByteArray.append(testArray[i]);
+//     }
+//     times++;
+//     if(times>10)
+//     {
+//         times = 0;
+//     }
+//     acqusitionPort->write(testByteArray); //开始发送心电数据
+// }
+
 void DataAcquisition::onRecBtServerTransDataSig(bool flag) //用来接受使用蓝牙传输数据的标志位
 {
      btTransDataFlag = flag;
@@ -642,6 +698,323 @@ void DataAcquisition::onRecM3DataShowCtlBtOpenSig(bool status) //M3DataControl�
 //}
 
 
+//接收8导数据，转换为12导 2024/10/17
+void DataAcquisition::ECGDataProcessArray(QByteArray ECGData)    //ECG数据处理函数
+{
+    quint8 dataSum,calDataSum = 0;
+    if(ECGData.length() == 26)
+    {
+        dataSum = ECGData[1];
+        for (int index = 2; index<ECGData.length() ; index++)
+        {
+            calDataSum += ECGData[index];
+        }
+        if(dataSum == calDataSum) //如果校验和正确
+        {
+            float data1,data2;
+            data1 = ((ECGData[2]<<16)|(ECGData[3]<<8)|(ECGData[4]))*1250000.0/16777215;
+            data2 = ((ECGData[5]<<16)|(ECGData[6]<<8)|(ECGData[7]))*1250000.0/16777215;
+            ecg_real_data_list_before_filter[0]<<(data1-data2);       //I
+            ecg_real_data_list_before_filter[1]<<data1;               //II
+            ecg_real_data_list_before_filter[2]<<data2;               //III
+            ecg_real_data_list_before_filter[3]<<(data1+data2)/(-2);  //aVR
+            ecg_real_data_list_before_filter[4]<<(data1-data2)/2;     //aVL
+            ecg_real_data_list_before_filter[5]<<(data2+data1)/2;     //aVF
+            //V1~V6
+            for (int j = 6; j<12;j++) {
+                ecg_real_data_list_before_filter[j]<<((ECGData[8+(j-6)*3]<<16)|(ECGData[9+(j-6)*3]<<8)|(ECGData[10+(j-6)*3]))*1250000.0/16777215;
+            }
+            for (int j =0;j <12;j++)
+            {
+                if(recordECGFlag == true)
+                {
+                    if(j!=11)
+                    {
+                        //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<'\t';
+
+                        //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<'\t';
+
+                    }
+                    else{
+                        //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<endl;
+
+                        //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<endl;
+                    }
+                }
+                ecg_real_data_list_before_filter[j].last() = ecg_real_data_list_before_filter[j].last()+baseLineArray[j];
+                if(j == 11)
+                {
+                    ecgDataFilter(); //滤波算法 滤波并计算心率 然后发送心率值
+                }
+            }
+        }
+        else {
+
+                qDebug()<<"ECG Wrong Data";
+        }
+    }
+    else {
+        qDebug()<<"ECG Wrong Data";
+    }
+}
+
+////接收为12导数据 测试是否会丢数 2024/10/18 此方法还是丢数
+//void DataAcquisition::ECGDataProcessArray(QByteArray ECGData)    //ECG数据处理函数
+//{
+//    quint8 dataSum,calDataSum = 0;
+//    if(ECGData.length() == 50)
+//    {
+//        dataSum = ECGData[1];
+//        for (int index = 2; index<ECGData.length() ; index++)
+//        {
+//            calDataSum += ECGData[index];
+//        }
+//        if(dataSum == calDataSum) //如果校验和正确
+//        {
+//            if(dataSum == calDataSum)
+//            {
+//                for(int j = 0;j<12;j++)
+//                {
+//                    ecg_real_data_list_before_filter[j] <<((ECGData[2+j*4]<<24|(ECGData[3+j*4]&0x00FF)<<16|ECGData[4+j*4]<<8|ECGData[5+j*4])*1250000.0/16777215);
+//                    if(recordECGFlag == true)
+//                    {
+//                        if(j!=11)
+//                        {
+//                            //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<'\t';
+
+//                            //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<'\t';
+
+//                        }
+//                        else{
+//                            //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<endl;
+
+//                            //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<endl;
+
+
+//                        }
+//                    }
+//                    ecg_real_data_list_before_filter[j].last() = ecg_real_data_list_before_filter[j].last()+baseLineArray[j];
+//                    if(j == 11)
+//                    {
+//                        ecgDataFilter(); //滤波算法 滤波并计算心率 然后发送心率值
+//                    }
+
+
+//                }
+//            }
+//        }
+//        else {
+
+//                qDebug()<<"ECG Wrong Data";
+//        }
+//    }
+//    else {
+//        qDebug()<<"ECG Wrong Data";
+//    }
+//}
+
+
+
+
+
+void DataAcquisition::SPO2DataProcessArray(QByteArray SPO2Data)  //SPO2数据处理函数
+{
+    quint8 dataSum,calDataSum = 0;
+    if(SPO2Data.length() == SPO2DataLength)
+    {
+        dataSum = SPO2Data[1];
+        calDataSum = 0;
+        for (int index = 2; index<SPO2Data.length() ; index++)
+        {
+            calDataSum += SPO2Data[index];
+        }
+        if(dataSum == calDataSum) //如果校验和正确
+        {
+            M3_SPO2_Sta_data<<SPO2Data[2];         //存储血氧的状态信息
+            M3_SPO2_PI_data<<SPO2Data[3];        //存储血氧PI灌注指数 单位0.1%
+            M3_SPO2_data<<SPO2Data[4];           //存储血氧值
+            M3_SPO2_pulse_rata<<SPO2Data[5];     //存储血氧脉率值
+            M3_SPO2_pulse_column<<SPO2Data[6];   //存储血氧脉搏柱
+            M3_SPO2_waves<<SPO2Data[7];          //存储血氧容积波
+            //qDebug()<<"the length M3_SPO2_PI_data = "<<M3_SPO2_PI_data.length();
+            emit SPO2Data2M3DataControl(&M3_SPO2_PI_data,&M3_SPO2_data,&M3_SPO2_pulse_rata,&M3_SPO2_pulse_column,&M3_SPO2_waves,&M3_SPO2_Sta_data);
+        }
+        else {
+                qDebug()<<"SPO2 Wrong Data";
+        }
+    }
+}
+void DataAcquisition::BPDataProcessArray(QByteArray BPData)      //BP数据处理函数
+{
+    quint8 dataSum,calDataSum = 0;
+    if(BPData.length() == BPDataLength)
+    {
+        dataSum = BPData[1];
+        calDataSum = 0;
+        for (int index = 2; index<BPData.length() ; index++)
+        {
+            calDataSum += BPData[index];
+        }
+        if(dataSum == calDataSum) //如果校验和正确
+        {
+            M3_BP_sys_data << ((0<<8)|(BPData[3]&0x00FF));//buf[i+1]&0x00ff是因为当最高位为1是，buf前面多出一个字节，这样转换的值高位就会变为0xFF，例如0x93就会变为0xff93
+            M3_BP_dia_data << (BPData[4]<<8 | (BPData[5]&0x00FF));
+            if(M3_BP_dia_data<M3_BP_sys_data)
+            {
+                emit NIBPData2M3DataControl(&M3_BP_sys_data,&M3_BP_dia_data);
+            }
+            if(M3_BP_sys_data.length()>2)
+            {
+                M3_BP_sys_data.takeLast();
+            }
+            if(M3_BP_dia_data.length()>2)
+            {
+                M3_BP_dia_data.takeLast();
+            }
+        }
+        else {
+                qDebug()<<"BP Wrong Data";
+        }
+    }
+
+
+}
+void DataAcquisition::LeadOffDataProcessArray(QByteArray leadOff) //leadOff数据处理函数
+{
+    quint8 dataSum,calDataSum = 0;
+    if(leadOff.length() == LeadOffDataLength)
+    {
+        dataSum = leadOff[1];
+        calDataSum = 0;
+        for (int index = 2; index<leadOff.length() ; index++)
+        {
+            calDataSum += leadOff[index];
+        }
+        if(dataSum == calDataSum) //如果校验和正确
+        {
+            quint8 statusP =  leadOff[2];
+            quint8 statusN =  leadOff[3];
+            if(statusP&0x80) //8
+            {
+                //qDebug()<<"V6 lead off "<<endl;
+                //emit leadOffSignal2M3DataControl();
+                emit leadOffSignal2M3DataControl(33);
+            }
+            else
+            {
+                //leadOffSignal2M3DataControl
+                emit leadOffSignal2M3DataControl(52);
+            }
+
+
+            if(statusP&0x40)//7
+            {
+                //qDebug()<<"V5 lead off "<<endl;
+                emit leadOffSignal2M3DataControl(32);
+            }
+            else
+            {
+                //leadOffSignal2M3DataControl
+                emit leadOffSignal2M3DataControl(51);
+            }
+
+
+            if(statusP&0x20)//6
+            {
+                //qDebug()<<"V4 lead off "<<endl;
+                emit leadOffSignal2M3DataControl(31);
+
+            }
+            else
+            {
+                //leadOffSignal2M3DataControl
+                emit leadOffSignal2M3DataControl(50);
+            }
+
+
+            if(statusP&0x10)//5
+            {
+                //qDebug()<<"V3 lead off "<<endl;
+                emit leadOffSignal2M3DataControl(30);
+            }
+            else
+            {
+                //leadOffSignal2M3DataControl
+                emit leadOffSignal2M3DataControl(49);
+            }
+
+
+            if(statusP&0x08)//4
+            {
+                //qDebug()<<"V2 lead off "<<endl;
+                emit leadOffSignal2M3DataControl(29);
+            }
+            else
+            {
+                //leadOffSignal2M3DataControl
+                emit leadOffSignal2M3DataControl(48);
+            }
+
+
+            if(statusP&0x04)//3
+            {
+                //qDebug()<<"V1 lead off "<<endl;
+                emit leadOffSignal2M3DataControl(28);
+            }
+            else
+            {
+                //leadOffSignal2M3DataControl
+                emit leadOffSignal2M3DataControl(47);
+            }
+
+
+            if(statusP&0x02)//2
+            {
+                //qDebug()<<"LL lead off "<<endl;
+                emit leadOffSignal2M3DataControl(27);
+            }
+            else
+            {
+                //leadOffSignal2M3DataControl
+                emit leadOffSignal2M3DataControl(46);
+            }
+
+
+
+            if(statusN&0x02)//1
+            {
+                //qDebug()<<"LA lead off "<<endl;
+                emit leadOffSignal2M3DataControl(26);
+            }
+            else
+            {
+                //leadOffSignal2M3DataControl
+                emit leadOffSignal2M3DataControl(45);
+            }
+
+
+            if(statusN&0x01)//1
+            {
+                //qDebug()<<"RA lead off "<<endl;
+                emit leadOffSignal2M3DataControl(25);
+            }
+            else
+            {
+                emit leadOffSignal2M3DataControl(44);
+            }
+        }
+        else {
+
+                qDebug()<<"LeadOff Wrong Data";
+        }
+    }
+}
+
+
+
+
+
+
 
 /*
 *   AD 的基数data_list=ecg_data1'*1000*2.5/(2^24-1)*1.25*1000    data_list=ecg_data1'*1000*5/(2^24-1)*0.625*1000
@@ -656,14 +1029,12 @@ void DataAcquisition::onRecM3DataShowCtlBtOpenSig(bool status) //M3DataControl�
 ***/
 void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进行分析，将心电数据转换成需要的形式，心电数据，血压数据和血氧数据分离开来,采用新的方法要不然心电显示会有异常,大竖线
 {
-    float tmpECGData = 0;//用于临时存储心电数据
-    int startFlagCount = 0;
-    int endFlagCount = 0;
-    bool startFlag = false;
-    int dataLength = 0;
-    int nextLength = 0;
-    quint8 dataSum = 0,calDataSum = 0;
+    QList<QByteArray> M3DataList;
 
+    int M3DataListLen = 0;
+    QString M3DataString;
+    QList<QString> M3DataStringList;
+    QByteArray listHead = QByteArray("0a0dfefefe");
     leftDataArray.clear(); //每次进入清理该ByteArray容器
 
     if(serialPortRecLength != buf.length())
@@ -672,364 +1043,878 @@ void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进�
         qDebug()<<"RecBuf.Length = "<<buf.length();
 
     }
-
-    /**********************************************测试丢数用*********************************************/
-    if(recordECGFlag == true)
+    M3DataString = QString(buf.toHex());
+    M3DataStringList = M3DataString.split("0a0dfefefe");
+    for (int i = 0;i<M3DataStringList.length();i++)
     {
-        for (int i =0;i< buf.length();i++)
+        if(M3DataStringList[i].length()>0)
         {
-            //*orifilestream<<QString::number(buf[i],16);
-            *orifilestream<<QString("%1").arg(buf[i],2,16,QLatin1Char('0'));
+            M3DataList.append(QByteArray::fromHex(M3DataStringList[i].toLocal8Bit()));
         }
     }
-
-    /**********************************************测试丢数用*********************************************/
-    for (int i = 0;i<buf.length();i++)  //整个大循环中寻找有用的数据，心电数据，血氧数据，血压数据，导联脱落数据
+    M3DataListLen = M3DataList.length();
+    //qDebug()<<"M3DataListLen = "<<M3DataListLen;
+    if(M3DataListLen>0)
     {
-        checkMark:
-        if((buf[i]=='\xFE')&&(buf[i+1]=='\xFE')&&(buf[i+2]=='\xFE')&&(startFlag == false))//先判断开始位 第一次寻找帧头
+        //针对list列表的第一项进行分析
+        //处理第一个元素
+        int firstElementLength = M3DataList[0].length();
+        if(firstElementLength == 0) //如果list第一个元素是空的
         {
-            startFlag = true;
-            startFlagCount = i+3; //存储的是帧头后面的第一个值的位置，用于判断是什么类型的数据 buf[startFlagCount] = 0x01 心电数据 =0X02 血氧数据 =0X03 血压数据 =0X04 导联脱落数据
-            dataSum = buf[startFlagCount+1];   //校验和，校验和为除去枕头和数据类型以及校验和位之外所有这一帧的数据位的和
+            M3DataList.takeFirst();
+            firstElementLength = M3DataList[0].length();
+            qDebug()<<"The First element is empty";
         }
-        else if((buf[i]=='\xFE')&&(buf[i+1]=='\xFE')&&(buf[i+2]=='\xFE')&&(startFlag))//如果第一次寻找帧头已结束
+        if((M3DataList[0][0] == '\xfe')&&(M3DataList[0][1] == '\xfe')&&(M3DataList[0][2] == '\xfe'))
         {
-            endFlagCount = i;
-            dataLength = endFlagCount-startFlagCount-1;
-            dataSum = buf[startFlagCount+1];
-            //qDebug()<<"dataSum = "<<dataSum<<"dataLength = "<<dataLength;
-            calDataSum = 0;
-            //qDebug()<<"startFlagCount1 = "<<startFlagCount<<"endFlagCount1 = "<<endFlagCount;
-            if((buf[startFlagCount] == '\x01')&&(dataLength == 49))//心电数据 49 = 48 + 1 有效数据长度为48
+            if((firstElementLength == (ECGDataLength+3))&&(M3DataList[0][3] == '\x01'))
             {
-                for (int sumCount = 0;sumCount<48;sumCount++)
-                {
-                    calDataSum += buf[startFlagCount+sumCount+2];
-                }
-                if(dataSum == calDataSum)
-                {
-                    for(int j = 0;j<12;j++)
-                    {
-                        //ecg_real_data_list_before_filter[j] <<((buf[startFlagCount+1+j*4]<<24|(buf[startFlagCount+2+j*4]&0x00FF)<<16|buf[startFlagCount+3+j*4]<<8|buf[startFlagCount+4+j*4])*1250000.0/16777215);
-                        ecg_real_data_list_before_filter[j] <<((buf[startFlagCount+2+j*4]<<24|(buf[startFlagCount+3+j*4]&0x00FF)<<16|buf[startFlagCount+4+j*4]<<8|buf[startFlagCount+5+j*4])*1250000.0/16777215);
-
-                        //ecg_real_data_array[j] <<((buf[i]<<24|(buf[i+1]&0x00FF)<<16|buf[i+2]<<8|buf[i+3])*1250000.0/16777215);
-                        //                    tempECGData=((buf[i]<<24|(buf[i+1]&0x00FF)<<16|buf[i+2]<<8|buf[i+3])*1250000.0/16777215);
-                        //                    if(ecg_real_data_list_before_filter[j].length()>0)
-                        //                    {
-                        //                        if(qAbs(ecg_real_data_list_before_filter[j].last() - tempECGData)>ECG_DIFF_THRESHOLD) //如果出现一个突兀的数值
-                        //                        {
-                        //                                ECGDataAbrutFlag = true;
-                        //                        }
-                        //                        else {
-                        //                            break;
-                        //                        }
-                        //                    }
-                        //                    ecg_real_data_list_before_filter[j]<<tempECGData;
-                        //ecg_real_data_list_before_filter[j]<<(((buf[i]<<24|(buf[i+1]&0x00FF)<<16|buf[i+2]<<8|buf[i+3])*1250000.0/16777215)+baseLineArray[j]);
-                        if(recordECGFlag == true)
-                        {
-                            if(j!=11)
-                            {
-                                //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<'\t';
-
-                                //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<'\t';
-
-                            }
-                            else{
-                                //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<endl;
-
-                                //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<endl;
-
-
-                            }
-                        }
-                        ecg_real_data_list_before_filter[j].last() = ecg_real_data_list_before_filter[j].last()+baseLineArray[j];
-                        if(j == 11)
-                        {
-                            //                        if(ECGDataAbrutFlag) //如果数据有突兀值标志位
-                            //                        {
-                            //                            ECGDataAbrutProcess(j)
-                            //                        }
-                            //                        else
-                            //                        {
-                            ecgDataFilter(); //滤波算法 滤波并计算心率 然后发送心率值
-                            //                        }
-                        }
-
-
-                    }
-                }
-                else{
-                    qDebug()<<"ECG Wrong ECG Data";//<<QString::number(dataSum,16)<<","<<QString::number(calDataSum,16);
-                    //qDebug()<<"startFlagCount = "<<startFlagCount<<"buf.length() = "<<buf.length();
-                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
-                    i = endFlagCount;
-                    startFlag = false;
-                    //qDebug()<<"startFlagCount = "<<startFlagCount<<"endFlagCount = "<<endFlagCount;
-                    goto checkMark;
-                   //dataSum = buf[startFlagCount+1];
-                   //qDebug()<<"The dataSum = "<<QString::number(buf[startFlagCount+1],16);
-                }
+                M3DataList[0].remove(0,3);
+                ECGDataProcessArray(M3DataList[0]);
             }
-            else if ((buf[startFlagCount] == '\x02')&&(dataLength == 7)) //血氧数据 7 = 6+1 有效数据长度为6
+            else if ((firstElementLength == (SPO2DataLength+3))&&(M3DataList[0][3] == '\x02'))
             {
-
-                //第一位是状态位bit0:1 手指插入标志 1是手指未，0是手指插入
-                //bit1:1 探头脱落标志 1探头脱落，0是探头正常
-                //bit2:1 测量干扰提示 1测量有干扰 0是测量无干扰
-                //bit3:1 脉搏音 bit7~bit4 未定义
-                //qDebug()<<QString::number(buf[startFlagCount],16)<<","<<QString::number(buf[startFlagCount+1],16)<<","<<QString::number(buf[startFlagCount+2],16)<<","<<QString::number(buf[startFlagCount+3],16)<<","<<QString::number(buf[startFlagCount+4],16)<<","<<QString::number(buf[startFlagCount+5],16)<<","<<QString::number(buf[startFlagCount+6],16)<<","<<QString::number(buf[startFlagCount+7],16)<<",";
-                for (int sumCount = 0;sumCount<6;sumCount++)
-                {
-                    calDataSum += buf[startFlagCount+sumCount+2];
-                }
-                if(calDataSum == dataSum)
-                {
-                    M3_SPO2_Sta_data<<buf[startFlagCount+2];         //存储血氧的状态信息
-                    M3_SPO2_PI_data<<buf[startFlagCount+3];        //存储血氧PI灌注指数 单位0.1%
-                    M3_SPO2_data<<buf[startFlagCount+4];           //存储血氧值
-                    M3_SPO2_pulse_rata<<buf[startFlagCount+5];     //存储血氧脉率值
-                    M3_SPO2_pulse_column<<buf[startFlagCount+6];   //存储血氧脉搏柱
-                    M3_SPO2_waves<<buf[startFlagCount+7];          //存储血氧容积波
-                    //qDebug()<<"the length M3_SPO2_PI_data = "<<M3_SPO2_PI_data.length();
-                    emit SPO2Data2M3DataControl(&M3_SPO2_PI_data,&M3_SPO2_data,&M3_SPO2_pulse_rata,&M3_SPO2_pulse_column,&M3_SPO2_waves,&M3_SPO2_Sta_data);
-                }
-                else {
-                    qDebug()<<"SPO2 wrong data";
-                    i = endFlagCount;
-                    startFlag = false;
-                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
-                    goto checkMark;
-                }
+                M3DataList[0].remove(0,3);
+                SPO2DataProcessArray(M3DataList[0]);
             }
-            else if ((buf[startFlagCount] == '\x03')&&(dataLength == 13)) //血压数据 13 = 12+1 有效数据长度为12
-            //else if (buf[startFlagCount] == '\x03') //血压数据 13 = 12+1 有效数据长度为12
+            else if ((firstElementLength == (BPDataLength+3))&&(M3DataList[0][3] == '\x03'))
             {
-                //quint16 sys;
-                //quint16 dia;
-                for (int sumCount = 0;sumCount<12;sumCount++)
-                {
-                    calDataSum += buf[startFlagCount+sumCount+2];
-                }
-
-                if(calDataSum==dataSum)
-                {
-                    M3_BP_sys_data << ((0<<8)|(buf[startFlagCount+3]&0x00FF));//buf[i+1]&0x00ff是因为当最高位为1是，buf前面多出一个字节，这样转换的值高位就会变为0xFF，例如0x93就会变为0xff93
-                    M3_BP_dia_data << (buf[startFlagCount+4]<<8 | (buf[startFlagCount+5]&0x00FF));
-                    if(M3_BP_dia_data<M3_BP_sys_data)
-                    {
-                        emit NIBPData2M3DataControl(&M3_BP_sys_data,&M3_BP_dia_data);
-                    }
-                    if(M3_BP_sys_data.length()>2)
-                    {
-                       M3_BP_sys_data.takeLast();
-                    }
-                    if(M3_BP_dia_data.length()>2)
-                    {
-                       M3_BP_dia_data.takeLast();
-                    }
-                    qDebug()<<"dataLength = "<<dataLength;
-                    qDebug()<<"sys = "<<M3_BP_sys_data<<"dia = "<<M3_BP_dia_data;
-                    qDebug()<<"recived the BP result";
-                }
-                else {
-                    qDebug()<<"BP wrong data";
-                    i = endFlagCount;
-                    startFlag = false;
-                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
-                    goto checkMark;
-                }
+                M3DataList[0].remove(0,3);
+                BPDataProcessArray(M3DataList[0]);
             }
-            else if((buf[startFlagCount] == '\x04')&&(dataLength == 3)) //导联脱落数据 3 = 2+1 有效数据长度为3
+            else if ((firstElementLength == (LeadOffDataLength+3))&&(M3DataList[0][3] == '\x04'))
             {
-                //i+=4;
-                quint8 statusP = buf[startFlagCount+2];
-                quint8 statusN = buf[startFlagCount+3];
-                calDataSum = statusP+statusN;
-                if(calDataSum == dataSum) //如果和一致
-                {
-                    if(statusP&0x80) //8
-                    {
-                        //qDebug()<<"V6 lead off "<<endl;
-                        //emit leadOffSignal2M3DataControl();
-                        emit leadOffSignal2M3DataControl(33);
-                    }
-                    else
-                    {
-                        //leadOffSignal2M3DataControl
-                        emit leadOffSignal2M3DataControl(52);
-                    }
-
-
-                    if(statusP&0x40)//7
-                    {
-                        //qDebug()<<"V5 lead off "<<endl;
-                        emit leadOffSignal2M3DataControl(32);
-                    }
-                    else
-                    {
-                        //leadOffSignal2M3DataControl
-                        emit leadOffSignal2M3DataControl(51);
-                    }
-
-
-                    if(statusP&0x20)//6
-                    {
-                        //qDebug()<<"V4 lead off "<<endl;
-                        emit leadOffSignal2M3DataControl(31);
-
-                    }
-                    else
-                    {
-                        //leadOffSignal2M3DataControl
-                        emit leadOffSignal2M3DataControl(50);
-                    }
-
-
-                    if(statusP&0x10)//5
-                    {
-                        //qDebug()<<"V3 lead off "<<endl;
-                        emit leadOffSignal2M3DataControl(30);
-                    }
-                    else
-                    {
-                        //leadOffSignal2M3DataControl
-                        emit leadOffSignal2M3DataControl(49);
-                    }
-
-
-                    if(statusP&0x08)//4
-                    {
-                        //qDebug()<<"V2 lead off "<<endl;
-                        emit leadOffSignal2M3DataControl(29);
-                    }
-                    else
-                    {
-                        //leadOffSignal2M3DataControl
-                        emit leadOffSignal2M3DataControl(48);
-                    }
-
-
-                    if(statusP&0x04)//3
-                    {
-                        //qDebug()<<"V1 lead off "<<endl;
-                        emit leadOffSignal2M3DataControl(28);
-                    }
-                    else
-                    {
-                        //leadOffSignal2M3DataControl
-                        emit leadOffSignal2M3DataControl(47);
-                    }
-
-
-                    if(statusP&0x02)//2
-                    {
-                        //qDebug()<<"LL lead off "<<endl;
-                        emit leadOffSignal2M3DataControl(27);
-                    }
-                    else
-                    {
-                        //leadOffSignal2M3DataControl
-                        emit leadOffSignal2M3DataControl(46);
-                    }
-
-
-
-                    if(statusN&0x02)//1
-                    {
-                        //qDebug()<<"LA lead off "<<endl;
-                        emit leadOffSignal2M3DataControl(26);
-                    }
-                    else
-                    {
-                        //leadOffSignal2M3DataControl
-                        emit leadOffSignal2M3DataControl(45);
-                    }
-
-
-                    if(statusN&0x01)//1
-                    {
-                        //qDebug()<<"RA lead off "<<endl;
-                        emit leadOffSignal2M3DataControl(25);
-                    }
-                    else
-                    {
-                        emit leadOffSignal2M3DataControl(44);
-                    }
-                }
-                else {
-                    qDebug()<<"leadOff wrong data";
-                    i = endFlagCount;
-                    startFlag = false;
-                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
-                    goto checkMark;
-                }
-    //            if(statusN&0x04)//第三通道的负输入 //会误报  暂时屏蔽掉该报警20230911
-    //            {
-    //                emit leadOffSignal2M3DataControl(34); //RL导联脱落
-    //                qDebug()<<"RL lead off "<<endl;
-    //            }
-    //            else {
-    //                emit leadOffSignal2M3DataControl(52);//RL未脱落
-    //            }
-            }
-            else //不符合要求的数据
-            {
-
-            }
-
-            startFlagCount = endFlagCount+3; //标记下一次的起始位置
-
-            if(buf[startFlagCount] == '\x01')
-            {
-                nextLength = startFlagCount + 49; //校验和1位+48个字节
-            }
-            else if(buf[startFlagCount] == '\x02')
-            {
-                nextLength = startFlagCount + 7;//校验和1位+6个字节
-            }
-            else if(buf[startFlagCount] == '\x03')
-            {
-                nextLength = startFlagCount + 13; //校验和1位+12个字节
-            }
-            else if(buf[startFlagCount] == '\x04')
-            {
-                nextLength = startFlagCount + 3;//校验和1位+2个字节
-            }
-            if(nextLength >buf.length()) //如果nextLength比总的数据长度还大，那么已经接近数据结束
-            {
-                //int ii = endFlagCount;
-                for(int ii = endFlagCount;ii<buf.length();ii++)
-                {
-                    leftDataArray.append(buf[ii]);
-                }
-                //qDebug()<<"left Data"<<nextLength -buf.length();
-                break;
-            }
-            else{//如果在范围内，获取校验和的值
-                dataSum = buf[startFlagCount+1];
-            }
-
-        }
-        if(i == (buf.length()-1)) //如果是最后一个值判断剩下的一帧数据是不是一整帧的数据
-        {
-            if(((buf.length()-1)-startFlagCount)>=0)  //将所有剩下的数据全部移动到leftDataArray中交给下一次循环判断
-            {
-                int ii = startFlagCount - 3;
-                for(ii = endFlagCount;ii<buf.length();ii++)
-                {
-                    leftDataArray.append(buf[ii]);
-                }
+                M3DataList[0].remove(0,3);
+                LeadOffDataProcessArray(M3DataList[0]);
             }
             else
             {
-                break;
+                qDebug()<<M3DataList[0].toHex();
+                qDebug()<<"first data error";
+            }
+
+        }
+        else if (M3DataList[0][0] == '\x01') {
+            ECGDataProcessArray(M3DataList[0]);
+        }
+        else if (M3DataList[0][0] == '\x02') {
+            SPO2DataProcessArray(M3DataList[0]);
+        }
+        else if (M3DataList[0][0] == '\x03') {
+            BPDataProcessArray(M3DataList[0]);
+        }
+        else if (M3DataList[0][0] == '\x04') {
+            LeadOffDataProcessArray(M3DataList[0]);
+        }
+        else {
+            qDebug()<<M3DataList[0].toHex();
+            qDebug()<<"The first element is error";
+        }
+        //处理除第一个和最后一个之外的中间的所有元素
+        for(int i = 1;i<M3DataListLen-1;i++) //最后一帧数据单独处理 所以范围在M3DataListLen-1
+        {
+
+            //qDebug()<<"M3DataList[i].length() ="<<M3DataList[i].length();
+            //if((M3DataList[i][0] == '\x01')&&(M3DataList[i].length() == ECGDataLength)) //检测和处理ECG 数据
+            if(M3DataList[i][0] == '\x01') //检测和处理ECG 数据
+            {
+                ECGDataProcessArray(M3DataList[i]);
+            }
+            else if (M3DataList[i][0] == '\x02')  //检测和处理血氧数据
+            {
+                SPO2DataProcessArray(M3DataList[i]);
+            }
+            else if (M3DataList[i][0] == '\x03')  //检测和处理血压数据
+            {
+                BPDataProcessArray(M3DataList[i]);
+            }
+            else if (M3DataList[i][0] == '\x04')  //检测和处理导联脱落数据
+            {
+                LeadOffDataProcessArray(M3DataList[i]);
+            }
+            else{
+                qDebug()<<"M3DataList["<<i<<"] = "<<M3DataList[i].toHex();
+                //qDebug()<<"M3DataList["<<i<<"].length = "<<M3DataList[i].length();
+               qDebug()<<"Error Data";
             }
         }
+
+        //处理最后一个元素 不处理直接放到下一次的数据进行处理
+        leftDataArray.append(QByteArray::fromHex(listHead));
+        leftDataArray.append(M3DataList[M3DataListLen - 1]);
     }
+
 }
+
+
+///*
+//*   AD 的基数data_list=ecg_data1'*1000*2.5/(2^24-1)*1.25*1000    data_list=ecg_data1'*1000*5/(2^24-1)*0.625*1000
+//*   AD 的分辨率是24位的，所以是2^24-1,参考电压的范围是-2.5V~2.5V，因为1V=1000mV，所以ecg_data1'*1000*5/(2^24-1)是采集到实际mV值，0.625是修正系数
+//*   最后的1000是为了算法需要  1000*5/(2^24-1)*0.625*1000 = 5000*625/16777215 = 3125000/16777215
+//*/
+///*
+//20230724 使用生理信号模拟器 测得的AD采集到的值 data_list=ecg_data1'*1000*1.25/(2^24-1)*1000 该算式加了修正系数
+//在原来的基础上除以2.5
+//最后得到的值为1.25*1000*1000/16777215 =1250000/16777215
+
+//***/
+//void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进行分析，将心电数据转换成需要的形式，心电数据，血压数据和血氧数据分离开来,采用新的方法要不然心电显示会有异常,大竖线
+//{
+//    quint8 dataSum = 0,calDataSum = 0;
+//    QList<QByteArray> M3DataList;
+//    quint8 ECGDataLength = 50; //ECG的数据长度
+//    quint8 SPO2DataLength = 8; //血氧的数据长度
+//    quint8 BPDataLength = 14; //血压的数据长度
+//    quint8 LeadOffDataLength = 4; //导联脱落的数据长度
+//    int M3DataListLen = 0;
+//    QString M3DataString;
+//    QList<QString> M3DataStringList;
+//    QByteArray listHead = QByteArray("0a0dfefefe");
+//    leftDataArray.clear(); //每次进入清理该ByteArray容器
+
+//    if(serialPortRecLength != buf.length())
+//    {
+//        qDebug()<<"serialPortRecLength = "<<serialPortRecLength;
+//        qDebug()<<"RecBuf.Length = "<<buf.length();
+
+//    }
+//    M3DataString = QString(buf.toHex());
+//    M3DataStringList = M3DataString.split("0a0dfefefe");
+//    for (int i = 0;i<M3DataStringList.length();i++)
+//    {
+//        if(M3DataStringList[i].length()>0)
+//        {
+//            M3DataList.append(QByteArray::fromHex(M3DataStringList[i].toLocal8Bit()));
+//        }
+//    }
+//    M3DataListLen = M3DataList.length();
+//    //qDebug()<<"M3DataListLen = "<<M3DataListLen;
+//    if(M3DataListLen>0)
+//    {
+//        for(int i = 0;i<M3DataListLen;i++) //最后一帧数据单独处理 所以范围在M3DataListLen-1
+//        {
+
+//            //qDebug()<<"M3DataList[i].length() ="<<M3DataList[i].length();
+//            //if((M3DataList[i][0] == '\x01')&&(M3DataList[i].length() == ECGDataLength)) //检测和处理ECG 数据
+//            if(M3DataList[i][0] == '\x01') //检测和处理ECG 数据
+//            {
+//                if(M3DataList[i].length() == 26)
+//                {
+//                    dataSum = M3DataList[i][1];
+//                    calDataSum = 0;
+//                    for (int index = 2; index<M3DataList[i].length() ; index++)
+//                    {
+//                        calDataSum += M3DataList[i][index];
+//                    }
+//                    if(dataSum == calDataSum) //如果校验和正确
+//                    {
+//                        float data1,data2;
+//                        data1 = ((M3DataList[i][2]<<16)|(M3DataList[i][3]<<8)|(M3DataList[i][4]))*1250000.0/16777215;
+//                        data2 = ((M3DataList[i][5]<<16)|(M3DataList[i][6]<<8)|(M3DataList[i][7]))*1250000.0/16777215;
+//                        ecg_real_data_list_before_filter[0]<<(data1-data2);
+//                        ecg_real_data_list_before_filter[1]<<data1;
+//                        ecg_real_data_list_before_filter[2]<<data2;
+//                        ecg_real_data_list_before_filter[3]<<(data1+data2)/(-2);
+//                        ecg_real_data_list_before_filter[4]<<(data1-data2)/2;
+//                        ecg_real_data_list_before_filter[5]<<(data2+data1)/2;
+//                        for (int j = 6; j<12;j++) {
+//                            ecg_real_data_list_before_filter[j]<<(((M3DataList[i][8+(j-6)*3]<<16)|(M3DataList[i][9+(j-6)*3]<<8)|M3DataList[i][10+(j-6)*3]))*1250000.0/16777215;
+//                        }
+//                        for (int j =0;j <12;j++)
+//                        {
+//                            if(recordECGFlag == true)
+//                            {
+//                                if(j!=11)
+//                                {
+//                                    //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<'\t';
+
+//                                    //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<'\t';
+
+//                                }
+//                                else{
+//                                    //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<endl;
+
+//                                    //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<endl;
+//                                }
+//                            }
+//                            ecg_real_data_list_before_filter[j].last() = ecg_real_data_list_before_filter[j].last()+baseLineArray[j];
+//                            if(j == 11)
+//                            {
+//                                ecgDataFilter(); //滤波算法 滤波并计算心率 然后发送心率值
+//                            }
+//                        }
+//                    }
+//                    else {
+
+//                            qDebug()<<"ECG Wrong Data";
+//                    }
+//                }
+//                else {
+//                    if((i == M3DataListLen-1)&&(M3DataList[i].length() < 26))
+//                    {
+//                        qDebug()<<"ECG append data";
+//                        leftDataArray.append(listHead);
+//                        leftDataArray.append(M3DataList[M3DataListLen-1]);
+//                    }
+
+//                }
+//            }
+//            else if (M3DataList[i][0] == '\x02')  //检测和处理血氧数据
+//            {
+
+//                if(M3DataList[i].length() == SPO2DataLength)
+//                {
+//                    dataSum = M3DataList[i][1];
+//                    calDataSum = 0;
+//                    for (int index = 2; index<M3DataList[i].length() ; index++)
+//                    {
+//                        calDataSum += M3DataList[i][index];
+//                    }
+//                    if(dataSum == calDataSum) //如果校验和正确
+//                    {
+//                        M3_SPO2_Sta_data<<M3DataList[i][2];         //存储血氧的状态信息
+//                        M3_SPO2_PI_data<<M3DataList[i][3];        //存储血氧PI灌注指数 单位0.1%
+//                        M3_SPO2_data<<M3DataList[i][4];           //存储血氧值
+//                        M3_SPO2_pulse_rata<<M3DataList[i][5];     //存储血氧脉率值
+//                        M3_SPO2_pulse_column<<M3DataList[i][6];   //存储血氧脉搏柱
+//                        M3_SPO2_waves<<M3DataList[i][7];          //存储血氧容积波
+//                        //qDebug()<<"the length M3_SPO2_PI_data = "<<M3_SPO2_PI_data.length();
+//                        emit SPO2Data2M3DataControl(&M3_SPO2_PI_data,&M3_SPO2_data,&M3_SPO2_pulse_rata,&M3_SPO2_pulse_column,&M3_SPO2_waves,&M3_SPO2_Sta_data);
+//                    }
+//                    else {
+//                            qDebug()<<"SPO2 Wrong Data";
+//                    }
+//                }
+//                else
+//                {
+//                    if((i == M3DataListLen-1)&&(M3DataList[i].length() < SPO2DataLength))
+//                    {
+//                        qDebug()<<"SPO2 append data";
+//                        leftDataArray.append(listHead);
+//                        leftDataArray.append(M3DataList[M3DataListLen-1]);
+//                    }
+//                }
+//            }
+//            else if (M3DataList[i][0] == '\x03')  //检测和处理血压数据
+//            {
+
+//                if(M3DataList[i].length() == BPDataLength)
+//                {
+//                    dataSum = M3DataList[i][1];
+//                    calDataSum = 0;
+//                    for (int index = 2; index<M3DataList[i].length() ; index++)
+//                    {
+//                        calDataSum += M3DataList[i][index];
+//                    }
+//                    if(dataSum == calDataSum) //如果校验和正确
+//                    {
+//                        M3_BP_sys_data << ((0<<8)|(M3DataList[i][3]&0x00FF));//buf[i+1]&0x00ff是因为当最高位为1是，buf前面多出一个字节，这样转换的值高位就会变为0xFF，例如0x93就会变为0xff93
+//                        M3_BP_dia_data << (M3DataList[i][4]<<8 | (M3DataList[i][5]&0x00FF));
+//                        if(M3_BP_dia_data<M3_BP_sys_data)
+//                        {
+//                            emit NIBPData2M3DataControl(&M3_BP_sys_data,&M3_BP_dia_data);
+//                        }
+//                        if(M3_BP_sys_data.length()>2)
+//                        {
+//                            M3_BP_sys_data.takeLast();
+//                        }
+//                        if(M3_BP_dia_data.length()>2)
+//                        {
+//                            M3_BP_dia_data.takeLast();
+//                        }
+//                        //qDebug()<<"dataLength = "<<dataLength;
+//                        //qDebug()<<"sys = "<<M3_BP_sys_data<<"dia = "<<M3_BP_dia_data;
+//                        //qDebug()<<"recived the BP result";
+//                    }
+//                    else {
+//                            qDebug()<<"BP Wrong Data";
+//                    }
+//                }
+//                else {
+//                    if((i == M3DataListLen-1)&&(M3DataList[i].length() < BPDataLength))
+//                    {
+//                        qDebug()<<"BP append data";
+//                        leftDataArray.append(listHead);
+//                        leftDataArray.append(M3DataList[M3DataListLen-1]);
+//                    }
+//                }
+//            }
+//            else if (M3DataList[i][0] == '\x04')  //检测和处理导联脱落数据
+//            {
+
+//                if(M3DataList[i].length() == LeadOffDataLength)
+//                {
+//                    dataSum = M3DataList[i][1];
+//                    calDataSum = 0;
+//                    for (int index = 2; index<M3DataList[i].length() ; index++)
+//                    {
+//                        calDataSum += M3DataList[i][index];
+//                    }
+//                    if(dataSum == calDataSum) //如果校验和正确
+//                    {
+//                        quint8 statusP =  M3DataList[i][2];
+//                        quint8 statusN =  M3DataList[i][3];
+//                        if(statusP&0x80) //8
+//                        {
+//                            //qDebug()<<"V6 lead off "<<endl;
+//                            //emit leadOffSignal2M3DataControl();
+//                            emit leadOffSignal2M3DataControl(33);
+//                        }
+//                        else
+//                        {
+//                            //leadOffSignal2M3DataControl
+//                            emit leadOffSignal2M3DataControl(52);
+//                        }
+
+
+//                        if(statusP&0x40)//7
+//                        {
+//                            //qDebug()<<"V5 lead off "<<endl;
+//                            emit leadOffSignal2M3DataControl(32);
+//                        }
+//                        else
+//                        {
+//                            //leadOffSignal2M3DataControl
+//                            emit leadOffSignal2M3DataControl(51);
+//                        }
+
+
+//                        if(statusP&0x20)//6
+//                        {
+//                            //qDebug()<<"V4 lead off "<<endl;
+//                            emit leadOffSignal2M3DataControl(31);
+
+//                        }
+//                        else
+//                        {
+//                            //leadOffSignal2M3DataControl
+//                            emit leadOffSignal2M3DataControl(50);
+//                        }
+
+
+//                        if(statusP&0x10)//5
+//                        {
+//                            //qDebug()<<"V3 lead off "<<endl;
+//                            emit leadOffSignal2M3DataControl(30);
+//                        }
+//                        else
+//                        {
+//                            //leadOffSignal2M3DataControl
+//                            emit leadOffSignal2M3DataControl(49);
+//                        }
+
+
+//                        if(statusP&0x08)//4
+//                        {
+//                            //qDebug()<<"V2 lead off "<<endl;
+//                            emit leadOffSignal2M3DataControl(29);
+//                        }
+//                        else
+//                        {
+//                            //leadOffSignal2M3DataControl
+//                            emit leadOffSignal2M3DataControl(48);
+//                        }
+
+
+//                        if(statusP&0x04)//3
+//                        {
+//                            //qDebug()<<"V1 lead off "<<endl;
+//                            emit leadOffSignal2M3DataControl(28);
+//                        }
+//                        else
+//                        {
+//                            //leadOffSignal2M3DataControl
+//                            emit leadOffSignal2M3DataControl(47);
+//                        }
+
+
+//                        if(statusP&0x02)//2
+//                        {
+//                            //qDebug()<<"LL lead off "<<endl;
+//                            emit leadOffSignal2M3DataControl(27);
+//                        }
+//                        else
+//                        {
+//                            //leadOffSignal2M3DataControl
+//                            emit leadOffSignal2M3DataControl(46);
+//                        }
+
+
+
+//                        if(statusN&0x02)//1
+//                        {
+//                            //qDebug()<<"LA lead off "<<endl;
+//                            emit leadOffSignal2M3DataControl(26);
+//                        }
+//                        else
+//                        {
+//                            //leadOffSignal2M3DataControl
+//                            emit leadOffSignal2M3DataControl(45);
+//                        }
+
+
+//                        if(statusN&0x01)//1
+//                        {
+//                            //qDebug()<<"RA lead off "<<endl;
+//                            emit leadOffSignal2M3DataControl(25);
+//                        }
+//                        else
+//                        {
+//                            emit leadOffSignal2M3DataControl(44);
+//                        }
+//                    }
+//                    else {
+//                        if(i == M3DataListLen-1)
+//                        {
+//                            qDebug()<<"LeadOff append data";
+//                            leftDataArray.append(listHead);
+//                            leftDataArray.append(M3DataList[M3DataListLen-1]);
+//                        }
+//                        else
+//                        {
+//                            qDebug()<<"LeadOff Wrong Data";
+//                        }
+//                    }
+//                }
+//                else {
+//                    if((i == M3DataListLen-1)&&(M3DataList[i].length() < LeadOffDataLength))
+//                    {
+//                        qDebug()<<"LeadOff append data";
+//                        leftDataArray.append(listHead);
+//                        leftDataArray.append(M3DataList[M3DataListLen-1]);
+//                    }
+//                }
+//            }
+//            else{
+//                if()
+//                qDebug()<<"M3DataList["<<i<<"] = "<<M3DataList[i].toHex();
+//                //qDebug()<<"M3DataList["<<i<<"].length = "<<M3DataList[i].length();
+//               qDebug()<<"Error Data";
+//            }
+//        }
+//        //最后一帧直接加入下一次循环
+//        //leftDataArray.append(M3DataList[M3DataListLen-1]);
+//        //qDebug()<<"M3DataList["<<(M3DataListLen-1)<<"] = "<<M3DataList[M3DataListLen-1].toHex();
+//    }
+
+//}
+
+
+
+
+
+
+
+
+
+
+//void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进行分析，将心电数据转换成需要的形式，心电数据，血压数据和血氧数据分离开来,采用新的方法要不然心电显示会有异常,大竖线
+//{
+//    float tmpECGData = 0;//用于临时存储心电数据
+//    int startFlagCount = 0;
+//    int endFlagCount = 0;
+//    bool startFlag = false;
+//    int dataLength = 0;
+//    int nextLength = 0;
+//    quint8 dataSum = 0,calDataSum = 0;
+
+//    leftDataArray.clear(); //每次进入清理该ByteArray容器
+
+//    if(serialPortRecLength != buf.length())
+//    {
+//        qDebug()<<"serialPortRecLength = "<<serialPortRecLength;
+//        qDebug()<<"RecBuf.Length = "<<buf.length();
+
+//    }
+
+//    /**********************************************测试丢数用*********************************************/
+////    if(recordECGFlag == true)
+////    {
+////        for (int i =0;i< buf.length();i++)
+////        {
+////            //*orifilestream<<QString::number(buf[i],16);
+////            *orifilestream<<QString("%1").arg(buf[i],2,16,QLatin1Char('0'));
+////        }
+////    }
+
+//    /**********************************************测试丢数用*********************************************/
+//    for (int i = 0;i<buf.length();i++)  //整个大循环中寻找有用的数据，心电数据，血氧数据，血压数据，导联脱落数据
+//    {
+//        checkMark:
+//        if((buf[i]=='\xFE')&&(buf[i+1]=='\xFE')&&(buf[i+2]=='\xFE')&&(startFlag == false))//先判断开始位 第一次寻找帧头
+//        {
+//            startFlag = true;
+//            startFlagCount = i+3; //存储的是帧头后面的第一个值的位置，用于判断是什么类型的数据 buf[startFlagCount] = 0x01 心电数据 =0X02 血氧数据 =0X03 血压数据 =0X04 导联脱落数据
+//            dataSum = buf[startFlagCount+1];   //校验和，校验和为除去枕头和数据类型以及校验和位之外所有这一帧的数据位的和
+//        }
+//        else if((buf[i]=='\xFE')&&(buf[i+1]=='\xFE')&&(buf[i+2]=='\xFE')&&(startFlag))//如果第一次寻找帧头已结束
+//        {
+//            endFlagCount = i;
+//            dataLength = endFlagCount-startFlagCount-1;
+//            dataSum = buf[startFlagCount+1];
+//            //qDebug()<<"dataSum = "<<dataSum<<"dataLength = "<<dataLength;
+//            calDataSum = 0;
+//            //qDebug()<<"startFlagCount1 = "<<startFlagCount<<"endFlagCount1 = "<<endFlagCount;
+//            if(dataLength !=49)
+//            {
+
+//                //qDebug()<<"datalength = "<<dataLength;
+////                if(dataLength == 48)
+////                {
+////                    if(recordECGFlag == true)
+////                    {
+////                        for (int i = 0;i < 51; i++) {
+////                            if(i!=51)
+////                            {
+////                                //qDebug()<<QString("%1").arg(buf[i+startFlagCount],2,16,QLatin1Char('0'))<<"\t";
+////                                *orifilestream<<QString("%1").arg(buf[i+startFlagCount],2,16,QLatin1Char('0'));
+////                            }
+////                            else {
+////                                //qDebug()<<QString("%1").arg(buf[i+startFlagCount],2,16,QLatin1Char('0'))<<endl;
+////                                *orifilestream<<QString("%1").arg(buf[i+startFlagCount],2,16,QLatin1Char('0'))<<endl;
+////                            }
+////                        }
+////                    }
+////                    //qDebug()<<"buf.len = "<<buf.length()<<","<<"startFlagCount = "<<startFlagCount;
+////                }
+//                if(dataLength>0)
+//                {
+//                    qDebug()<<"bad data,buf.len = "<<dataLength;//<<","<<"startFlagCount = "<<startFlagCount;
+//                }
+//            }
+//            if((buf[startFlagCount] == '\x01')&&(dataLength == 49))//心电数据 49 = 48 + 1 有效数据长度为48
+//            {
+//                for (int sumCount = 0;sumCount<48;sumCount++)
+//                {
+//                    calDataSum += buf[startFlagCount+sumCount+2];
+//                }
+//                if(dataSum == calDataSum)
+//                {
+//                    for(int j = 0;j<12;j++)
+//                    {
+//                        //ecg_real_data_list_before_filter[j] <<((buf[startFlagCount+1+j*4]<<24|(buf[startFlagCount+2+j*4]&0x00FF)<<16|buf[startFlagCount+3+j*4]<<8|buf[startFlagCount+4+j*4])*1250000.0/16777215);
+//                        ecg_real_data_list_before_filter[j] <<((buf[startFlagCount+2+j*4]<<24|(buf[startFlagCount+3+j*4]&0x00FF)<<16|buf[startFlagCount+4+j*4]<<8|buf[startFlagCount+5+j*4])*1250000.0/16777215);
+
+//                        //ecg_real_data_array[j] <<((buf[i]<<24|(buf[i+1]&0x00FF)<<16|buf[i+2]<<8|buf[i+3])*1250000.0/16777215);
+//                        //                    tempECGData=((buf[i]<<24|(buf[i+1]&0x00FF)<<16|buf[i+2]<<8|buf[i+3])*1250000.0/16777215);
+//                        //                    if(ecg_real_data_list_before_filter[j].length()>0)
+//                        //                    {
+//                        //                        if(qAbs(ecg_real_data_list_before_filter[j].last() - tempECGData)>ECG_DIFF_THRESHOLD) //如果出现一个突兀的数值
+//                        //                        {
+//                        //                                ECGDataAbrutFlag = true;
+//                        //                        }
+//                        //                        else {
+//                        //                            break;
+//                        //                        }
+//                        //                    }
+//                        //                    ecg_real_data_list_before_filter[j]<<tempECGData;
+//                        //ecg_real_data_list_before_filter[j]<<(((buf[i]<<24|(buf[i+1]&0x00FF)<<16|buf[i+2]<<8|buf[i+3])*1250000.0/16777215)+baseLineArray[j]);
+//                        if(recordECGFlag == true)
+//                        {
+//                            if(j!=11)
+//                            {
+//                                //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<'\t';
+
+//                                //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<'\t';
+
+//                            }
+//                            else{
+//                                //*orifilestream<<QString("%1").arg(ecg_real_data_list_before_filter[j].last())<<endl;
+
+//                                //*orifilestream<<QString::number(buf[startFlagCount+1+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+2+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+3+j*4],16)<<QString(" ")<<QString::number(buf[startFlagCount+4+j*4],16)<<endl;
+
+
+//                            }
+//                        }
+//                        ecg_real_data_list_before_filter[j].last() = ecg_real_data_list_before_filter[j].last()+baseLineArray[j];
+//                        if(j == 11)
+//                        {
+//                            //                        if(ECGDataAbrutFlag) //如果数据有突兀值标志位
+//                            //                        {
+//                            //                            ECGDataAbrutProcess(j)
+//                            //                        }
+//                            //                        else
+//                            //                        {
+//                            ecgDataFilter(); //滤波算法 滤波并计算心率 然后发送心率值
+//                            //                        }
+//                        }
+
+
+//                    }
+//                }
+//                else{
+//                    qDebug()<<"ECG Wrong ECG Data";//<<QString::number(dataSum,16)<<","<<QString::number(calDataSum,16);
+//                    //qDebug()<<"startFlagCount = "<<startFlagCount<<"buf.length() = "<<buf.length();
+//                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
+//                    i = endFlagCount;
+//                    startFlag = false;
+//                    //qDebug()<<"startFlagCount = "<<startFlagCount<<"endFlagCount = "<<endFlagCount;
+//                    goto checkMark;
+//                   //dataSum = buf[startFlagCount+1];
+//                   //qDebug()<<"The dataSum = "<<QString::number(buf[startFlagCount+1],16);
+//                }
+//            }
+//            else if ((buf[startFlagCount] == '\x02')&&(dataLength == 7)) //血氧数据 7 = 6+1 有效数据长度为6
+//            {
+
+//                //第一位是状态位bit0:1 手指插入标志 1是手指未，0是手指插入
+//                //bit1:1 探头脱落标志 1探头脱落，0是探头正常
+//                //bit2:1 测量干扰提示 1测量有干扰 0是测量无干扰
+//                //bit3:1 脉搏音 bit7~bit4 未定义
+//                //qDebug()<<QString::number(buf[startFlagCount],16)<<","<<QString::number(buf[startFlagCount+1],16)<<","<<QString::number(buf[startFlagCount+2],16)<<","<<QString::number(buf[startFlagCount+3],16)<<","<<QString::number(buf[startFlagCount+4],16)<<","<<QString::number(buf[startFlagCount+5],16)<<","<<QString::number(buf[startFlagCount+6],16)<<","<<QString::number(buf[startFlagCount+7],16)<<",";
+//                for (int sumCount = 0;sumCount<6;sumCount++)
+//                {
+//                    calDataSum += buf[startFlagCount+sumCount+2];
+//                }
+//                if(calDataSum == dataSum)
+//                {
+//                    M3_SPO2_Sta_data<<buf[startFlagCount+2];         //存储血氧的状态信息
+//                    M3_SPO2_PI_data<<buf[startFlagCount+3];        //存储血氧PI灌注指数 单位0.1%
+//                    M3_SPO2_data<<buf[startFlagCount+4];           //存储血氧值
+//                    M3_SPO2_pulse_rata<<buf[startFlagCount+5];     //存储血氧脉率值
+//                    M3_SPO2_pulse_column<<buf[startFlagCount+6];   //存储血氧脉搏柱
+//                    M3_SPO2_waves<<buf[startFlagCount+7];          //存储血氧容积波
+//                    //qDebug()<<"the length M3_SPO2_PI_data = "<<M3_SPO2_PI_data.length();
+//                    emit SPO2Data2M3DataControl(&M3_SPO2_PI_data,&M3_SPO2_data,&M3_SPO2_pulse_rata,&M3_SPO2_pulse_column,&M3_SPO2_waves,&M3_SPO2_Sta_data);
+//                }
+//                else {
+//                    qDebug()<<"SPO2 wrong data";
+//                    i = endFlagCount;
+//                    startFlag = false;
+//                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
+//                    goto checkMark;
+//                }
+//            }
+//            else if ((buf[startFlagCount] == '\x03')&&(dataLength == 13)) //血压数据 13 = 12+1 有效数据长度为12
+//            //else if (buf[startFlagCount] == '\x03') //血压数据 13 = 12+1 有效数据长度为12
+//            {
+//                //quint16 sys;
+//                //quint16 dia;
+//                for (int sumCount = 0;sumCount<12;sumCount++)
+//                {
+//                    calDataSum += buf[startFlagCount+sumCount+2];
+//                }
+
+//                if(calDataSum==dataSum)
+//                {
+//                    M3_BP_sys_data << ((0<<8)|(buf[startFlagCount+3]&0x00FF));//buf[i+1]&0x00ff是因为当最高位为1是，buf前面多出一个字节，这样转换的值高位就会变为0xFF，例如0x93就会变为0xff93
+//                    M3_BP_dia_data << (buf[startFlagCount+4]<<8 | (buf[startFlagCount+5]&0x00FF));
+//                    if(M3_BP_dia_data<M3_BP_sys_data)
+//                    {
+//                        emit NIBPData2M3DataControl(&M3_BP_sys_data,&M3_BP_dia_data);
+//                    }
+//                    if(M3_BP_sys_data.length()>2)
+//                    {
+//                       M3_BP_sys_data.takeLast();
+//                    }
+//                    if(M3_BP_dia_data.length()>2)
+//                    {
+//                       M3_BP_dia_data.takeLast();
+//                    }
+//                    qDebug()<<"dataLength = "<<dataLength;
+//                    qDebug()<<"sys = "<<M3_BP_sys_data<<"dia = "<<M3_BP_dia_data;
+//                    qDebug()<<"recived the BP result";
+//                }
+//                else {
+//                    qDebug()<<"BP wrong data";
+//                    i = endFlagCount;
+//                    startFlag = false;
+//                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
+//                    goto checkMark;
+//                }
+//            }
+//            else if((buf[startFlagCount] == '\x04')&&(dataLength == 3)) //导联脱落数据 3 = 2+1 有效数据长度为3
+//            {
+//                //i+=4;
+//                quint8 statusP = buf[startFlagCount+2];
+//                quint8 statusN = buf[startFlagCount+3];
+//                calDataSum = statusP+statusN;
+//                if(calDataSum == dataSum) //如果和一致
+//                {
+//                    if(statusP&0x80) //8
+//                    {
+//                        //qDebug()<<"V6 lead off "<<endl;
+//                        //emit leadOffSignal2M3DataControl();
+//                        emit leadOffSignal2M3DataControl(33);
+//                    }
+//                    else
+//                    {
+//                        //leadOffSignal2M3DataControl
+//                        emit leadOffSignal2M3DataControl(52);
+//                    }
+
+
+//                    if(statusP&0x40)//7
+//                    {
+//                        //qDebug()<<"V5 lead off "<<endl;
+//                        emit leadOffSignal2M3DataControl(32);
+//                    }
+//                    else
+//                    {
+//                        //leadOffSignal2M3DataControl
+//                        emit leadOffSignal2M3DataControl(51);
+//                    }
+
+
+//                    if(statusP&0x20)//6
+//                    {
+//                        //qDebug()<<"V4 lead off "<<endl;
+//                        emit leadOffSignal2M3DataControl(31);
+
+//                    }
+//                    else
+//                    {
+//                        //leadOffSignal2M3DataControl
+//                        emit leadOffSignal2M3DataControl(50);
+//                    }
+
+
+//                    if(statusP&0x10)//5
+//                    {
+//                        //qDebug()<<"V3 lead off "<<endl;
+//                        emit leadOffSignal2M3DataControl(30);
+//                    }
+//                    else
+//                    {
+//                        //leadOffSignal2M3DataControl
+//                        emit leadOffSignal2M3DataControl(49);
+//                    }
+
+
+//                    if(statusP&0x08)//4
+//                    {
+//                        //qDebug()<<"V2 lead off "<<endl;
+//                        emit leadOffSignal2M3DataControl(29);
+//                    }
+//                    else
+//                    {
+//                        //leadOffSignal2M3DataControl
+//                        emit leadOffSignal2M3DataControl(48);
+//                    }
+
+
+//                    if(statusP&0x04)//3
+//                    {
+//                        //qDebug()<<"V1 lead off "<<endl;
+//                        emit leadOffSignal2M3DataControl(28);
+//                    }
+//                    else
+//                    {
+//                        //leadOffSignal2M3DataControl
+//                        emit leadOffSignal2M3DataControl(47);
+//                    }
+
+
+//                    if(statusP&0x02)//2
+//                    {
+//                        //qDebug()<<"LL lead off "<<endl;
+//                        emit leadOffSignal2M3DataControl(27);
+//                    }
+//                    else
+//                    {
+//                        //leadOffSignal2M3DataControl
+//                        emit leadOffSignal2M3DataControl(46);
+//                    }
+
+
+
+//                    if(statusN&0x02)//1
+//                    {
+//                        //qDebug()<<"LA lead off "<<endl;
+//                        emit leadOffSignal2M3DataControl(26);
+//                    }
+//                    else
+//                    {
+//                        //leadOffSignal2M3DataControl
+//                        emit leadOffSignal2M3DataControl(45);
+//                    }
+
+
+//                    if(statusN&0x01)//1
+//                    {
+//                        //qDebug()<<"RA lead off "<<endl;
+//                        emit leadOffSignal2M3DataControl(25);
+//                    }
+//                    else
+//                    {
+//                        emit leadOffSignal2M3DataControl(44);
+//                    }
+//                }
+//                else {
+//                    qDebug()<<"leadOff wrong data";
+//                    i = endFlagCount;
+//                    startFlag = false;
+//                    //startFlagCount = endFlagCount+3; //标记下一次的起始位置
+//                    goto checkMark;
+//                }
+//    //            if(statusN&0x04)//第三通道的负输入 //会误报  暂时屏蔽掉该报警20230911
+//    //            {
+//    //                emit leadOffSignal2M3DataControl(34); //RL导联脱落
+//    //                qDebug()<<"RL lead off "<<endl;
+//    //            }
+//    //            else {
+//    //                emit leadOffSignal2M3DataControl(52);//RL未脱落
+//    //            }
+//            }
+//            else //不符合要求的数据
+//            {
+
+//            }
+
+//            startFlagCount = endFlagCount+3; //标记下一次的起始位置
+
+//            if(buf[startFlagCount] == '\x01')
+//            {
+//                nextLength = startFlagCount + 49; //校验和1位+48个字节
+//            }
+//            else if(buf[startFlagCount] == '\x02')
+//            {
+//                nextLength = startFlagCount + 7;//校验和1位+6个字节
+//            }
+//            else if(buf[startFlagCount] == '\x03')
+//            {
+//                nextLength = startFlagCount + 13; //校验和1位+12个字节
+//            }
+//            else if(buf[startFlagCount] == '\x04')
+//            {
+//                nextLength = startFlagCount + 3;//校验和1位+2个字节
+//            }
+//            if(nextLength >buf.length()) //如果nextLength比总的数据长度还大，那么已经接近数据结束
+//            {
+//                //int ii = endFlagCount;
+//                for(int ii = endFlagCount;ii<buf.length();ii++)
+//                {
+//                    leftDataArray.append(buf[ii]);
+//                }
+//                //qDebug()<<"left Data"<<nextLength -buf.length();
+//                break;
+//            }
+//            else{//如果在范围内，获取校验和的值
+//                dataSum = buf[startFlagCount+1];
+//            }
+
+//        }
+//        if(i == (buf.length()-1)) //如果是最后一个值判断剩下的一帧数据是不是一整帧的数据
+//        {
+//            if(((buf.length()-1)-startFlagCount)>=0)  //将所有剩下的数据全部移动到leftDataArray中交给下一次循环判断
+//            {
+//                int ii = startFlagCount - 3;
+//                for(ii = endFlagCount;ii<buf.length();ii++)
+//                {
+//                    leftDataArray.append(buf[ii]);
+//                }
+//            }
+//            else
+//            {
+//                break;
+//            }
+//        }
+//    }
+//}
+
+
+
+
 
 //void DataAcquisition::AcqDataAnalyse(QByteArray buf) //对采集到的数据进行分析，将心电数据转换成需要的形式，心电数据，血压数据和血氧数据分离开来
 //{
@@ -1389,20 +2274,44 @@ void DataAcquisition::getECGdata(int i,QByteArray *buf) //处理得到心电数�
 }
 
 
+//void DataAcquisition::dataAcq()//槽函数,读取串口的数据 测试版
+//{
+
+//    QByteArray buf = acqusitionPort->readAll();
+//    //AcqDataAnalyse(buf);
+//    /**********************************************测试丢数用*********************************************/
+//    if(recordECGFlag == true)
+//    {
+//        for (int i =0;i< buf.length();i++)
+//        {
+//            //*orifilestream<<QString::number(buf[i],16);
+//            *orifilestream<<QString("%1").arg(buf[i],2,16,QLatin1Char('0'));
+//        }
+//    }
+
+//    /**********************************************测试丢数用*********************************************/
+//}
+
 
 void DataAcquisition::dataAcq()//槽函数,读取串口的数据
 {
     QByteArray buf = acqusitionPort->readAll();
     QByteArray bufAll;
-    //dataSocket->write(buf);//将读取到的数据，全部通过网线传递给电脑
-    //AcqDataAnalyse(buf);
-    //qDebug()<<"read data";
+
 //    if(buf.length()>0)
 //    {
 //        qDebug()<<"revive length is "<<buf.length();
 //        qDebug()<<buf.toHex()<<endl;
 //    }
-
+    if(recordECGFlag == true)
+    {
+        for (int i =0;i< buf.length();i++)
+        {
+            //*orifilestream<<QString::number(buf[i],16);
+            *orifilestream<<QString("%1").arg(buf[i],2,16,QLatin1Char('0'));
+        }
+    }
+//    qDebug()<<"buf Length is :"<<buf.length();
     if(netConnectedFlag)  //使用有线和wifi传输数据
     {
         dataSocket->write(buf);//将读取到的数据，全部通过网线传递给电脑
@@ -1412,7 +2321,7 @@ void DataAcquisition::dataAcq()//槽函数,读取串口的数据
     {
         emit BtTransData(buf);
     }
-    serialPortRecLength = buf.length();
+    //serialPortRecLength = buf.length();
             //AcqDataAnalyse(buf);
 
     if(leftDataArray.length() == 0)
@@ -1427,6 +2336,7 @@ void DataAcquisition::dataAcq()//槽函数,读取串口的数据
 
         bufAll.clear();
         bufAll.append(leftDataArray);
+        //qDebug()<<leftDataArray.toHex();
         leftDataArray.clear();
         bufAll.append(buf);
         //qDebug()<<"bufAll.length = "<<bufAll.length();
@@ -1477,10 +2387,13 @@ void DataAcquisition::onRecordECGFlagChangeSignal(bool value)
             recordECGFlag = value;
             QString timestring = QDateTime::currentDateTime().toString("yy-MM-dd hh-mm-ss");
             QString oridataString;
+            QString testoridataString;
             //oridataString = "/test/data/ori"+timestring;//存储在核心板上
             //timestring = "/test/data/"+timestring;//存储在核心板上
             oridataString = filePath+"/ori"+timestring;//存储在核心板上
             timestring =  filePath+"/"+timestring;//存储在核心板上
+
+            testoridataString = filePath+"/testori"+timestring;//存储在核心板上
 
             //timestring = filePath+"/ECG"+timestring; //存储在U盘上
             //        QDir dir(filePath);
@@ -1497,6 +2410,7 @@ void DataAcquisition::onRecordECGFlagChangeSignal(bool value)
             //        }
 
             oriecgfile = new QFile(oridataString);
+            testoriecgfile = new QFile(testoridataString);
             ret = oriecgfile->open(QIODevice::ReadWrite|QIODevice::Text);
             if(ret == true)
             {
@@ -1506,6 +2420,14 @@ void DataAcquisition::onRecordECGFlagChangeSignal(bool value)
                 qDebug()<<"ori open file failed";
             }
 
+            ret = testoriecgfile->open(QIODevice::ReadWrite|QIODevice::Text);
+            if(ret == true)
+            {
+                qDebug()<<"testori open file sucess";
+            }
+            else {
+                qDebug()<<"testori open file failed";
+            }
 
             ecgfile = new QFile(timestring);
 
@@ -1522,6 +2444,7 @@ void DataAcquisition::onRecordECGFlagChangeSignal(bool value)
             //存储原始数据
 
             orifilestream ->setDevice(oriecgfile);
+            testorifilestream->setDevice(testoriecgfile);
         }
         else{  //如果文件夹不存在
             recordECGFlag = false;
@@ -1537,7 +2460,9 @@ void DataAcquisition::onRecordECGFlagChangeSignal(bool value)
 
         orifilestream->flush();
         oriecgfile->close();
-
+        testorifilestream->flush();
+        testoriecgfile->close();
+        qDebug()<<"Close file sucess";
         cmd = "sync";
         system(cmd.toLatin1().data());
     }

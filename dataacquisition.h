@@ -63,6 +63,12 @@ public:
     explicit DataAcquisition(QObject *parent = nullptr);
     ECGDataProcess *ecgDataProc; //数据处理类
     QTimer *tm;
+
+    //QTimer *testtm; //串口发送数据定时器 //测试串口丢数据变量，测试完成，删掉此变量
+    //quint8 times = 0;//测试串口丢数据变量，测试完成，删掉此变量
+    //QByteArray testByteArray;
+
+
     QSerialPort *acqusitionPort; //采集端口
     void SerialPortInit();//串口初始化。初始化串口相关的内容，波特率之类的
 
@@ -73,10 +79,22 @@ public:
     void recordECGDataAfterFilter2File(int length);//将滤波后的心电数据存入文件当中
 
     void ECGDataAbrutProcess(int ); //ECG突兀数值的判断
+
+
+    void ECGDataProcessArray(QByteArray ECGData);    //ECG数据处理函数
+    void SPO2DataProcessArray(QByteArray SPO2Data);  //SPO2数据处理函数
+    void BPDataProcessArray(QByteArray BPData);      //BP数据处理函数
+    void LeadOffDataProcessArray(QByteArray leadOff); //leadOff数据处理函数
+
+
     BluetoothServer *btServer;  //定义蓝牙的服务器对象指针
 //    bool BluetoothOpen();  //蓝牙打开
 //    void BluetoothClosed(); //蓝牙关闭
 
+    quint8 ECGDataLength = 26; //ECG的数据长度
+    quint8 SPO2DataLength = 8; //血氧的数据长度
+    quint8 BPDataLength = 14; //血压的数据长度
+    quint8 LeadOffDataLength = 4; //导联脱落的数据长度
     float baseLineArray[12] = {500.0,-61100.0,-61500.0,30020.0,31300.0,-61500.0,-45100.0,-43500.0,-43770.0,-44770.0,-43670.0,-44670.0};
 
     quint8 ecgcount;
@@ -117,9 +135,14 @@ public:
     bool recordECGFlag;
     QFile *ecgfile ;
     QFile *oriecgfile;
+
     QTextStream *filestream;
     QTextStream *orifilestream;  //原始数据的数据流，测试用 测试高通滤波数据
     QTcpSocket *dataSocket;      //TCP客户端，通过此套接字向电脑上传数据。将串口传过来的数据通过网口直接转发给电脑，目前是通过网线往电脑传
+
+//  测试丢数原因用
+    QFile *testoriecgfile;
+    QTextStream *testorifilestream;
 
 
     //电池电量的驱动文件
@@ -204,8 +227,15 @@ public slots:
 
 
     void onRecM3DataShowupdateSoftWareSig(void);
+    void BTOnRecBPStartORStopSlot(bool);//蓝牙接收数据血压测量开始与结束的指令
+
+
+
+
 //    void onRecBtServerBtOpenSuccess(); //用来接收蓝牙打开成功的信号
 //    void onRecBtServerBtOpenFailed(); //用来接收蓝牙打开成功的信号
+
+    //void sendSerialDataSlot(void); //测试串口丢数据函数，测试完成，删掉此函数
 
 
 

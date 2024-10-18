@@ -34,6 +34,7 @@ signals:
     void bluetoothOpenSuccess(); //蓝牙打开成功
     void bluetoothOpenFailed();  //蓝牙打开失败
     void bluetoothStartTranDataFlag(bool);//是否开始通过蓝牙传数据
+    void BPStartORStopSig(bool); //血压是开始还是结束 开始为true,结束为false
 
 private slots:
     void clientConnected();
